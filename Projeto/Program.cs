@@ -1,7 +1,6 @@
 ﻿using Projeto.Entity;
 using Projeto.Service;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace Projeto
@@ -14,7 +13,7 @@ namespace Projeto
         {
             MenuPrincipal();
         }
-        //
+        /////
         static void MenuPrincipal()
         {
             try
@@ -62,6 +61,9 @@ namespace Projeto
             catch(Exception e)
             {
                 Console.WriteLine("Error: " + e.Message);
+                Console.WriteLine("Pressione qualquer tecla para voltar...");
+                Console.ReadLine();
+
                 MenuPrincipal();
             }
             
@@ -220,10 +222,10 @@ namespace Projeto
             Console.WriteLine("-------------------------Controle de Patio-------------------------");
             Console.WriteLine($"Capacidade Total: {patio.Capacidade_Total} - " +
                 $"Vagas Ocupadas: { patio.Vagas_Ocupadas } - " +
-                $"Vagas Disponiveis: { patio.Vagas_Disponiveis}");
+                $"Vagas Disponiveis: { patio.Capacidade_Total - patio.Vagas_Ocupadas}");
             Console.WriteLine("-------------------------------------------------------------------");
 
-            string listaEstacionamento = servico.ListaEstacionamento();
+            var listaEstacionamento = servico.ListaEstacionamento();
 
             Console.WriteLine(listaEstacionamento);
 
@@ -242,6 +244,13 @@ namespace Projeto
             Console.WriteLine("Insira o CPF do Cliente");
             var cpf = Console.ReadLine();
 
+            //Verifica se o CPF tem 11 digitos e a variavel é numerica.
+            while (servico.ValidacaoCPF(cpf) == false)
+            {
+                Console.WriteLine("\nInsira um CPF valido!");
+                cpf = Console.ReadLine();
+            }
+
             servico.CadastrarCliente(nome, cpf);
 
             Console.Clear();
@@ -252,8 +261,7 @@ namespace Projeto
         {
             Console.Clear();
 
-            string clientes = servico.ListagemClientes();
-
+            var clientes = servico.ListagemClientes();
 
             Console.Write(clientes);
 
@@ -269,6 +277,21 @@ namespace Projeto
             Console.WriteLine("Insira a Placa do Veiculo:");
             var placa = Console.ReadLine();
 
+            //Verifica se a Placa é valida.
+            while (servico.ValidacaoPlaca(placa) == false)
+            {
+                Console.WriteLine("\nInsira uma Placa Valida!");
+                placa = Console.ReadLine();
+            }
+
+            if (servico.VerificarVeiculoExiste(placa))
+            {
+                Console.WriteLine("\nVeiculo ja Existente!");
+                Thread.Sleep(1000);
+
+                MenuVeiculos();
+            }
+
             Console.WriteLine("Insira a Marca do Veiculo:");
             var marca = Console.ReadLine();
 
@@ -276,11 +299,12 @@ namespace Projeto
             var modelo = Console.ReadLine();
 
             Console.WriteLine("Cliente Passante ou Fixo?: P/F");
-            string tipoCliente = Console.ReadLine();
+            var tipoCliente = Console.ReadLine();
 
-            while (tipoCliente != "P" && tipoCliente != "F")
+            //Força o Usuario a Inserir P ou F.
+            while (servico.ValidacaoTipoCliente(tipoCliente) == false)
             {
-                Console.WriteLine("Insira um valor valido!:");
+                Console.WriteLine("\nInsira um valor valido!");
                 tipoCliente = Console.ReadLine();
             }
 
@@ -307,32 +331,13 @@ namespace Projeto
         {
             Console.Clear();
 
-            string veiculos = servico.ListagemVeiculos();
+            var veiculos = servico.ListagemVeiculos();
 
             Console.Write(veiculos);
             Console.WriteLine("Pressione qualquer tecla para voltar...");
             Console.ReadLine();
 
             MenuVeiculos();
-        }
-
-        static void ValorPorPeriodo()
-        {
-            Console.Clear();
-            Console.WriteLine("Informe a Data Inicial: ");
-            DateTime dataInicial = DateTime.Parse(Console.ReadLine());
-
-            Console.WriteLine("Informe a Data Final: ");
-            DateTime dataFinal = DateTime.Parse(Console.ReadLine());
-
-            double valor = servico.ValorPorPeriodo(dataInicial, dataFinal);
-
-            Console.Clear();
-            Console.WriteLine($"Valor Arrecadado no Período Informado: {valor} " );
-            Console.WriteLine("Pressione qualquer tecla para voltar...");
-            Console.ReadLine();
-
-            MenuFinanceiro();
         }
 
         static void CadastroDeTicket()
@@ -353,9 +358,13 @@ namespace Projeto
             Console.WriteLine("Insira o Numero do Ticket: ");
             var id_Ticket = Console.ReadLine();
 
-            servico.FecharTicket(id_Ticket);
+            var retorno = servico.FecharTicket(id_Ticket);
 
-            Console.Clear();
+            Console.WriteLine(retorno);
+
+            Console.WriteLine("Pressione qualquer tecla para voltar...");
+            Console.ReadLine();
+
             MenuTickets();
         }
 
@@ -363,7 +372,7 @@ namespace Projeto
         {
             Console.Clear();
 
-            string tickets = servico.ListagemTicketsAtivos();
+            var tickets = servico.ListagemTicketsAtivos();
 
             Console.Write(tickets);
             
@@ -377,7 +386,7 @@ namespace Projeto
         {
             Console.Clear();
 
-            string tickets = servico.ListagemTicketsFinalizados();
+            var tickets = servico.ListagemTicketsFinalizados();
 
             Console.Write(tickets);
 
@@ -387,6 +396,41 @@ namespace Projeto
             MenuTickets();
         }
 
-        
+        static void ValorPorPeriodo()
+        {
+            Console.Clear();
+            Console.WriteLine("Informe a Data Inicial: (DD/MM/AAAA)");
+            var date = Console.ReadLine();
+
+            //Verifica se a Data informada esta no formato correto.
+            while (servico.ValidacaoDateTime(date) == false)
+            {
+                Console.WriteLine("\nInsira uma Data Valida!");
+                date = Console.ReadLine();
+            }
+            DateTime dataInicial = DateTime.Parse(date);
+
+
+            Console.WriteLine("Informe a Data Final: (DD/MM/AAAA)");
+            date = Console.ReadLine();
+            
+            //Mesma logica acima, mas com o diferencial de verificar se a DataFinal é maior do que a DataInicial.
+            while (servico.ValidacaoDateTimeFinal(date, dataInicial) == false)
+            {
+                Console.WriteLine("\nInsira uma Data Valida!");
+                date = Console.ReadLine();
+            }
+            DateTime dataFinal = DateTime.Parse(date);
+
+            //Recebe o valor total do período chamando a função.
+            double valor = servico.ValorPorPeriodo(dataInicial, dataFinal);
+
+            Console.Clear();
+            Console.WriteLine($"Valor Arrecadado no Período Informado: {valor.ToString("F2")} ");
+            Console.WriteLine("Pressione qualquer tecla para voltar...");
+            Console.ReadLine();
+
+            MenuFinanceiro();
+        }
     }
 }
