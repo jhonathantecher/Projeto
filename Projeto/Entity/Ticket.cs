@@ -5,7 +5,7 @@ namespace Projeto.Entity
 {
     public class Ticket
     {
-        public string Id_Ticket { get; private set; }
+        public string Id { get; private set; }
         public string Id_Veiculo { get; private set; }
         public DateTime DataEntrada { get; set; }
         public DateTime? DataSaida { get; set; }
@@ -18,7 +18,7 @@ namespace Projeto.Entity
 
         public Ticket(string id_Ticket, string id_Veiculo, DateTime dataEntrada)
         {
-            Id_Ticket = id_Ticket;
+            Id = id_Ticket;
             Id_Veiculo = id_Veiculo;
             DataEntrada = dataEntrada;
             DataSaida = null;

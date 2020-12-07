@@ -58,17 +58,17 @@ namespace Projeto
                         break;
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Console.WriteLine("Error: " + e.Message);
+                Console.WriteLine($"\nError: {e.Message}");
                 Console.WriteLine("Pressione qualquer tecla para voltar...");
                 Console.ReadLine();
 
                 MenuPrincipal();
             }
-            
+
         }
-        
+
         static void MenuClientes()
         {
             Console.Clear();
@@ -85,7 +85,7 @@ namespace Projeto
             switch (opcao)
             {
                 case 1:
-                    CadastroDeCliente();
+                    CadastroCliente();
                     break;
                 case 2:
                     ListarClientes();
@@ -120,7 +120,7 @@ namespace Projeto
             switch (opcao)
             {
                 case 1:
-                    CadastroDeVeiculo();
+                    CadastroVeiculo();
                     break;
                 case 2:
                     ListarVeiculos();
@@ -157,10 +157,10 @@ namespace Projeto
             switch (opcao)
             {
                 case 1:
-                    CadastroDeTicket();
+                    CadastroTicket();
                     break;
                 case 2:
-                    FechamentoDeTicket();
+                    FechamentoTicket();
                     break;
                 case 3:
                     ListarTicketsAtivos();
@@ -189,7 +189,7 @@ namespace Projeto
             Console.WriteLine("1 - Selecionar Período");
             Console.WriteLine("2 - Voltar");
             Console.WriteLine("3 - Sair");
-            Console.WriteLine($"Valor arrecadado hoje: { servico.ValorPorPeriodo(DateTime.Today, DateTime.Now).ToString("F2") }");
+            //Console.WriteLine($"Valor arrecadado hoje: { servico.ValorPorPeriodo(DateTime.Today, DateTime.Now).ToString("F2") }");
             Console.WriteLine("-----------------------------");
             Console.WriteLine();
 
@@ -225,108 +225,136 @@ namespace Projeto
                 $"Vagas Disponiveis: { patio.Capacidade_Total - patio.Vagas_Ocupadas}");
             Console.WriteLine("-------------------------------------------------------------------");
 
-            var listaEstacionamento = servico.ListaEstacionamento();
+            //var listaEstacionamento = servico.ListaEstacionamento();
 
-            Console.WriteLine(listaEstacionamento);
+            //Console.WriteLine(listaEstacionamento);
 
-            Console.Write("Pressione qualquer tecla para voltar...");
+            Console.WriteLine("Pressione qualquer tecla para voltar...");
             Console.ReadLine();
 
             MenuPrincipal();
         }
 
-        static void CadastroDeCliente()
+        static void CadastroCliente()
         {
-            Console.Clear();
-            Console.WriteLine("Insira o nome do Cliente: ");
-            var nome = Console.ReadLine();
-
-            Console.WriteLine("Insira o CPF do Cliente");
-            var cpf = Console.ReadLine();
-
-            //Verifica se o CPF tem 11 digitos e a variavel é numerica.
-            while (servico.ValidacaoCPF(cpf) == false)
+            try
             {
-                Console.WriteLine("\nInsira um CPF valido!");
-                cpf = Console.ReadLine();
+                Console.Clear();
+                Console.WriteLine("Insira o nome do Cliente: ");
+                var nome = Console.ReadLine();
+
+                Console.WriteLine("Insira o CPF do Cliente");
+                var cpf = Console.ReadLine();
+
+                //Verifica se o CPF tem 11 digitos e a variavel é numerica.
+                while (servico.ValidacaoCPF(cpf) == false)
+                {
+                    Console.WriteLine("\nInsira um CPF valido!");
+                    cpf = Console.ReadLine();
+                }
+
+                servico.CadastrarCliente(nome, cpf);
+
+                MenuClientes();
             }
+            catch (Exception e)
+            {
+                Console.WriteLine($"\nErro: {e.Message}");
+                Console.WriteLine("Pressione qualquer tecla para voltar...");
+                Console.ReadLine();
 
-            servico.CadastrarCliente(nome, cpf);
-
-            Console.Clear();
-            MenuClientes();       
+                MenuClientes();
+            }
         }
 
         static void ListarClientes()
         {
-            Console.Clear();
+            try
+            {
+                Console.Clear();
 
-            var clientes = servico.ListagemClientes();
+                var clientes = servico.ListagemClientes();
 
-            Console.Write(clientes);
+                Console.Write(clientes);
 
-            Console.WriteLine("Pressione qualquer tecla para voltar...");
-            Console.ReadLine();
+                Console.WriteLine("Pressione qualquer tecla para voltar...");
+                Console.ReadLine();
 
-            MenuClientes();
+                MenuClientes();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"\nErro: {e.Message}");
+                Console.WriteLine("Pressione qualquer tecla para voltar...");
+                Console.ReadLine();
+
+                MenuClientes();
+            }           
         }
 
-        static void CadastroDeVeiculo()
+        static void CadastroVeiculo()
         {
-            Console.Clear();
-            Console.WriteLine("Insira a Placa do Veiculo:");
-            var placa = Console.ReadLine();
-
-            //Verifica se a Placa é valida.
-            while (servico.ValidacaoPlaca(placa) == false)
+            try
             {
-                Console.WriteLine("\nInsira uma Placa Valida!");
-                placa = Console.ReadLine();
+                Console.Clear();
+                Console.WriteLine("Insira a Placa do Veiculo:");
+                var placa = Console.ReadLine();
+
+                //Verifica se a Placa é valida.
+                while (servico.ValidacaoPlaca(placa) == false)
+                {
+                    Console.WriteLine("\nInsira uma Placa Valida!");
+                    placa = Console.ReadLine();
+                }
+
+                //Verifica se o Veiculo ja existe. Caso sim, lança uma Exception
+                servico.VerificarVeiculoExiste(placa);
+
+                Console.WriteLine("Insira a Marca do Veiculo:");
+                var marca = Console.ReadLine();
+
+                Console.WriteLine("Insira o Modelo do Veiculo:");
+                var modelo = Console.ReadLine();
+
+                Console.WriteLine("Cliente Passante ou Fixo?: P/F");
+                var tipoCliente = Console.ReadLine();
+
+                //Força o Usuario a Inserir P ou F.
+                while (servico.ValidacaoTipoCliente(tipoCliente) == false)
+                {
+                    Console.WriteLine("\nInsira um valor valido!");
+                    tipoCliente = Console.ReadLine();
+                }
+
+                string dono_Id = null;
+                string nome = null;
+
+                if (tipoCliente == "F")
+                {
+                    Console.WriteLine("Insira a Identificação do Dono do Veiculo:");
+                    dono_Id = Console.ReadLine();
+                }
+                else if (tipoCliente == "P")
+                {
+                    Console.WriteLine("Insira o Nome do Dono do Veiculo:");
+                    nome = Console.ReadLine();
+                }
+
+                servico.CadastrarVeiculo(placa, marca, modelo, dono_Id, nome, tipoCliente);
+
+                Console.Clear();
+                MenuVeiculos();
             }
-
-            if (servico.VerificarVeiculoExiste(placa))
+            catch (Exception e)
             {
-                Console.WriteLine("\nVeiculo ja Existente!");
-                Thread.Sleep(1000);
+                Console.WriteLine($"\nErro: {e.Message}");
+                Console.WriteLine("Pressione qualquer tecla para voltar...");
+                Console.ReadLine();
 
                 MenuVeiculos();
             }
-
-            Console.WriteLine("Insira a Marca do Veiculo:");
-            var marca = Console.ReadLine();
-
-            Console.WriteLine("Insira o Modelo do Veiculo:");
-            var modelo = Console.ReadLine();
-
-            Console.WriteLine("Cliente Passante ou Fixo?: P/F");
-            var tipoCliente = Console.ReadLine();
-
-            //Força o Usuario a Inserir P ou F.
-            while (servico.ValidacaoTipoCliente(tipoCliente) == false)
-            {
-                Console.WriteLine("\nInsira um valor valido!");
-                tipoCliente = Console.ReadLine();
-            }
-
-            string dono_Id = null;
-            string nome = null;
-
-            if (tipoCliente == "F") {
-                Console.WriteLine("Insira a Identificação do Dono do Veiculo:");
-                dono_Id = Console.ReadLine();
-            }
-            else if (tipoCliente == "P")
-            {
-                Console.WriteLine("Insira o Nome do Dono do Veiculo:");
-                nome = Console.ReadLine();
-            }
-            
-            servico.CadastrarVeiculo(placa, marca, modelo, tipoCliente, dono_Id, nome);
-
-            Console.Clear();
-            MenuVeiculos();
         }
-    
+
         static void ListarVeiculos()
         {
             Console.Clear();
@@ -340,32 +368,52 @@ namespace Projeto
             MenuVeiculos();
         }
 
-        static void CadastroDeTicket()
+        static void CadastroTicket()
         {
-            Console.Clear();
-            Console.WriteLine("Insira a Placa do Veiculo: ");
-            var placa = Console.ReadLine();
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("Insira a Placa do Veiculo: ");
+                var placa = Console.ReadLine();
 
-            servico.CadastrarTicket(placa);
+                servico.CadastrarTicket(placa);
 
-            Console.Clear();
-            MenuTickets();
+                Console.Clear();
+                MenuTickets();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Thread.Sleep(1000);
+
+                MenuTickets();
+            }
         }
 
-        static void FechamentoDeTicket()
+        static void FechamentoTicket()
         {
-            Console.Clear();
-            Console.WriteLine("Insira o Numero do Ticket: ");
-            var id_Ticket = Console.ReadLine();
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("Insira o Numero do Ticket: ");
+                var id_Ticket = Console.ReadLine();
 
-            var retorno = servico.FecharTicket(id_Ticket);
+                var retorno = servico.FecharTicket(id_Ticket);
 
-            Console.WriteLine(retorno);
+                Console.WriteLine(retorno);
 
-            Console.WriteLine("Pressione qualquer tecla para voltar...");
-            Console.ReadLine();
+                Console.WriteLine("Pressione qualquer tecla para voltar...");
+                Console.ReadLine();
 
-            MenuTickets();
+                MenuTickets();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Thread.Sleep(1000);
+
+                MenuTickets();
+            }
         }
 
         static void ListarTicketsAtivos()
@@ -375,7 +423,7 @@ namespace Projeto
             var tickets = servico.ListagemTicketsAtivos();
 
             Console.Write(tickets);
-            
+
             Console.WriteLine("Pressione qualquer tecla para voltar...");
             Console.ReadLine();
 
@@ -413,7 +461,7 @@ namespace Projeto
 
             Console.WriteLine("Informe a Data Final: (DD/MM/AAAA)");
             date = Console.ReadLine();
-            
+
             //Mesma logica acima, mas com o diferencial de verificar se a DataFinal é maior do que a DataInicial.
             while (servico.ValidacaoDateTimeFinal(date, dataInicial) == false)
             {
@@ -423,10 +471,10 @@ namespace Projeto
             DateTime dataFinal = DateTime.Parse(date);
 
             //Recebe o valor total do período chamando a função.
-            double valor = servico.ValorPorPeriodo(dataInicial, dataFinal);
+            //double valor = servico.ValorPorPeriodo(dataInicial, dataFinal);
 
             Console.Clear();
-            Console.WriteLine($"Valor Arrecadado no Período Informado: {valor.ToString("F2")} ");
+            //Console.WriteLine($"Valor Arrecadado no Período Informado: {valor.ToString("F2")} ");
             Console.WriteLine("Pressione qualquer tecla para voltar...");
             Console.ReadLine();
 

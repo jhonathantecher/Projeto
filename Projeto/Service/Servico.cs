@@ -3,92 +3,28 @@ using Projeto.Entity.Enum;
 using System.Threading;
 using System;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace Projeto.Service
 {
     public class Servico
     {
-        Cliente cliente = new Cliente();
-        Veiculo veiculo = new Veiculo();
-        Ticket ticket = new Ticket();
         Patio patio = new Patio();
 
-        public void CadastrarCliente(string nome, string cpf)
-        {
-            //Busca para verificar se o Cliente já existe.
-            var cli = BuscarCliente(cpf);
-
-            if (cli == null)
-            {
-                cli = new Cliente(cpf, nome, TipoCliente.Fixo);
-                cliente.ListaCliente.Add(cli);
-
-                Console.WriteLine("\nCadastrado com Sucesso!");
-                Thread.Sleep(1000);
-            }
-            else //Caso cli não seja nulo, significa que o Cliente já possui um cadastro.
-            {
-                Console.WriteLine("\nCliente já existente!");
-                Thread.Sleep(1000);
-            }
-
-        }
-
-        //Retorna Listagem contendo todo os Clientes.
-        public string ListagemClientes()
-        {
-            var listaCli = "";
-
-            foreach (var cliente in cliente.ListaCliente)
-            {
-                listaCli += cliente.Id + " - " + cliente.Nome + " - " + cliente.TipoCliente + "\n";
-
-            }
-            return listaCli;
-        }
-
-        public void CadastrarVeiculo(string placa, string marca, string modelo, string tipoCliente, string dono_Id, string nome)
-        {
-            Cliente cli;
-
-            //Verifica se o parametro dono_Id possui um valor.
-            //Se sim, significa que o Cliente informado pelo Usuario é um ClienteFixo e a condição cai no else.
-            //Se não, significa que o Cliente informado pelo Usuario é um ClientePassante.
-
-            //Caso o Cliente seja um ClienteFixo, é necessario que ele esteja cadastrado no Cadastro de Cliente.
-            //Portanto a condição else verifica se o Cliente informado existe na ListaCliente.
-            //Desse modo não há como informar um ClienteFixo inexistente.
-
-            if (dono_Id == null) //Passante
-            {
-                //Cria um ClientePassante e adiciona ele na ListaCliente.
-                cli = new Cliente((cliente.ListaCliente.Count + 1).ToString(), nome, TipoCliente.Passante);
-                cliente.ListaCliente.Add(cli);
-            }
-            else //Fixo
-            {
-                //Verifica se o ClienteFixo Existe.
-                cli = BuscarCliente(dono_Id);
-
-                if (cli == null)
-                {
-                    Console.WriteLine("\nCliente Inexistente!");
-                    Thread.Sleep(1000);
-                    return;
-                }
-            }
-
-            //Cadastra o Veiculo - Insere na Lista
-            var vei = new Veiculo(placa, cli.Id, marca, modelo);
-            veiculo.ListaVeiculos.Add(vei);
-
-            Console.WriteLine("\nCadastrado com Sucesso!");
-            Thread.Sleep(1000);
-        }
+        string diretorioCliente = @"C:\Users\jhonathan.rowinski\Desktop\Cliente.txt";
+        string diretorioVeiculo = @"C:\Users\jhonathan.rowinski\Desktop\Veiculo.txt";
+        string diretorioTicket = @"C:\Users\jhonathan.rowinski\Desktop\Ticket.txt";
 
         public bool ValidacaoCPF(string cpf)
         {
             if (cpf.Length == 11 && long.TryParse(cpf, out long numero))
+                return true;
+            return false;
+        }
+
+        public bool ValidacaoTipoCliente(string tipoCliente)
+        {
+            if (tipoCliente == "P" || tipoCliente == "F")
                 return true;
             return false;
         }
@@ -98,13 +34,6 @@ namespace Projeto.Service
             Regex regex = new Regex(@"^[A-Z]{3}\d{4}$");
 
             if (regex.IsMatch(placa))
-                return true;
-            return false;
-        }
-
-        public bool ValidacaoTipoCliente(string tipoCliente)
-        {
-            if (tipoCliente == "P" || tipoCliente == "F")
                 return true;
             return false;
         }
@@ -120,39 +49,158 @@ namespace Projeto.Service
         {
             if (DateTime.TryParse(date, out DateTime result))
                 if (DateTime.Parse(date) > dataInicial)
-                    return true;  
+                    return true;
                 else
                     Console.WriteLine("\nA Data Final deve ser maior que a Data Inicial!");
             return false;
         }
 
-        public bool VerificarVeiculoExiste(string placa)
+        public void CadastrarCliente(string nome, string cpf)
+        {
+            //Busca para verificar se o Cliente já existe.
+            var clienteExiste = BuscarCliente(cpf);
+
+            if (clienteExiste == "")
+            {
+                var cli = new Cliente(cpf, nome, TipoCliente.Fixo);
+
+                SalvarCliente(cli);
+
+                Console.WriteLine("\nCadastrado com Sucesso!");
+                Thread.Sleep(1000);
+            }
+            else
+            {
+                //Caso cli não seja nulo, significa que o Cliente já possui um cadastro.
+                throw new Exception("Cliente já existente!");
+            }
+        }
+
+        private void SalvarCliente(Cliente cli)
+        {
+            using (StreamWriter sw = File.AppendText(diretorioCliente))
+            {
+                sw.WriteLine($"{cli.Id},{cli.Nome},{cli.TipoCliente}");
+            }
+        }
+
+        //Retorna Listagem contendo todos os Clientes.
+        public string ListagemClientes()
+        {
+            var listaCli = "";
+
+            using (FileStream fs = new FileStream(diretorioCliente, FileMode.Open))
+            {
+                using (StreamReader sr = new StreamReader(fs))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        var linha = sr.ReadLine().Split(",");
+                        listaCli += $"{linha[0]} - {linha[1]} - {linha[2]}\n";
+                    }
+                }
+            }
+            return listaCli;
+        }
+
+        public void VerificarVeiculoExiste(string placa)
         {
             var vei = BuscarVeiculo(placa);
 
-            if (vei != null)
-                return true;
-            return false;
+            if (vei != "")
+                throw new Exception("\nVeiculo ja Existente!");
+
+        }
+        public void CadastrarVeiculo(string placa, string marca, string modelo, string dono_Id, string nome, string tipoCliente)
+        {
+            var idCliente = "";
+
+            //Verifica se o parametro dono_Id possui um valor.
+            //Se sim, significa que o Cliente informado pelo Usuario é um ClienteFixo.
+            //Se não, significa que o Cliente informado pelo Usuario é um ClientePassante.
+
+            //Caso o Cliente seja um ClienteFixo, é necessario que ele esteja cadastrado no Cadastro de Cliente.
+            //Portanto a condição tambem verifica se o Cliente informado existe.
+            //Desse modo não há como informar um ClienteFixo inexistente.
+            if (dono_Id != null) //Fixo
+            {
+                //Verifica se o ClienteFixo Existe.
+                var clienteExiste = BuscarCliente(dono_Id);
+
+                if (clienteExiste == "")
+                    throw new Exception("Cliente Inexistente!");
+                idCliente = dono_Id;
+            }
+            else //Passante
+            {
+                //Faz a leitura do arquivo onde os Clientes são salvos e verifica quantas linhas possui.
+                //Desse modo ele gera um ID de acordo com a quantidade de linhas no arquivo.
+                idCliente = (QuantidadeLinhasTXT(diretorioCliente) + 1).ToString();
+
+                //Cria um ClientePassante e salva.
+                var cli = new Cliente(idCliente, nome, TipoCliente.Passante);
+                SalvarCliente(cli);
+            }
+
+            var vei = new Veiculo(placa, idCliente, marca, modelo);
+            SalvarVeiculo(vei);
+
+            Console.WriteLine("\nCadastrado com Sucesso!");
+            Thread.Sleep(1000);
+        }
+
+        //Retorna a Quantidade de Linhas que o TXT possui.
+        private int QuantidadeLinhasTXT(string diretorio)
+        {
+            var count = 0;
+            using (FileStream fs = new FileStream(diretorio, FileMode.Open))
+            {
+                using (StreamReader sr = new StreamReader(fs))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        sr.ReadLine();
+                        count++;                       
+                    }
+                }
+            }
+            return count;
+        }
+
+        private void SalvarVeiculo(Veiculo vei)
+        {
+            using (StreamWriter sw = File.AppendText(diretorioVeiculo))
+            {
+                sw.WriteLine($"{vei.Id},{vei.Id_Dono},{vei.Marca},{vei.Modelo}");
+            }
         }
 
         //Retorna Listagem contendo todos os Veiculos.
         public string ListagemVeiculos()
         {
-            string ListVei = "";
+            var listaVei = "";
 
-            foreach (var veiculo in veiculo.ListaVeiculos)
+            using (FileStream fs = new FileStream(diretorioVeiculo, FileMode.Open))
             {
-                var dono = BuscarCliente(veiculo.Id_Dono);
+                using (StreamReader sr = new StreamReader(fs))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        var linha = sr.ReadLine().Split(",");
 
-                ListVei += $"Placa: {veiculo.Id_Placa} \n" +
-                    $"Marca: {veiculo.Marca} \n" +
-                    $"Modelo: {veiculo.Modelo} \n" +
-                    $"Dono:  {dono.Id}  -  {dono.Nome}" +
-                    $"\n\n";
+                        var cli = BuscarCliente(linha[1]);
+                        var linhaDono = cli.Split(",");
+
+                        listaVei += $"Placa: {linha[0]} \n" +
+                            $"Marca: {linha[2]} \n" +
+                            $"Modelo: {linha[3]} \n" +
+                            $"Dono:  {linhaDono[0]}  -  {linhaDono[1]}" +
+                            $"\n\n";
+                    }
+                }
             }
-
-            return ListVei;
-        }
+            return listaVei;
+        }      
 
         //Realiza a Operação de Inclusão de um Ticket.
         public void CadastrarTicket(string placa)
@@ -160,8 +208,7 @@ namespace Projeto.Service
             //Verifica se o Veiculo existe.
             var vei = BuscarVeiculo(placa);
 
-            //Se o Veiculo existir ele sera diferente de null.
-            if (vei != null)
+            if (vei != "")
             {
                 //Verifica se o Veiculo informado não esta no Patio.
                 //Dessa forma um Ticket não pode ser gerado duas vezes para o mesmo Veiculo.
@@ -172,32 +219,38 @@ namespace Projeto.Service
                     {
                         //Se o veiculo existir e houverem Vagas Disponiveis, o Ticket é gerado.
                         var tic = new Ticket(
-                            (ticket.ListaTickets.Count + 1).ToString(),
-                            vei.Id_Placa,
+                            (QuantidadeLinhasTXT(diretorioTicket) + 1).ToString(),
+                            placa,
                             DateTime.Now);
 
-                        ticket.ListaTickets.Add(tic);
                         patio.Vagas_Ocupadas++;
+
+                        SalvarTicket(tic);
 
                         Console.WriteLine("\nTicket Gerado com Sucesso!");
                         Thread.Sleep(1000);
                     }
                     else
                     {
-                        Console.WriteLine("\nPatio Lotado!");
-                        Thread.Sleep(1000);
+                        throw new Exception("\nPatio Lotado!");
                     }
                 }
                 else
                 {
-                    Console.WriteLine("\nO Veiculo já se encontra no Estacionamento!");
-                    Thread.Sleep(1500);
+                    throw new Exception("\nO Veiculo já se encontra no Estacionamento!");
                 }
             }
             else
             {
-                Console.WriteLine("\nVeiculo não Encontrado!");
-                Thread.Sleep(1000);
+                throw new Exception("\nVeiculo não Encontrado!");
+            }
+        }
+
+        private void SalvarTicket(Ticket tic)
+        {
+            using (StreamWriter sw = File.AppendText(diretorioTicket))
+            {
+                sw.WriteLine($"{tic.Id},{tic.Id_Veiculo},{tic.DataEntrada},{tic.DataSaida},{tic.Valor}");
             }
         }
 
@@ -205,69 +258,83 @@ namespace Projeto.Service
         public string FecharTicket(string id_Ticket)
         {
             //Busca o Ticket para Verificar se ele existe.
-            //Caso exista, irá retornar o Index do Ticket na Lista Ticket para que ele possa ser localizado e finalizado.
-            int index = BuscarIndexTicket(id_Ticket);
+            var tic = BuscarTicket(id_Ticket);
 
-            if (index >= 0) //Se o Ticket existir o index será igual ou superior a zero.
+            if (tic != "")
             {
-                if (ticket.ListaTickets[index].DataSaida == null) //Verifica se o Ticket esta ativo para poder ser finalizado.
+                var itemTicket = tic.Split(",");
+
+                if (itemTicket[3] == "") //Verifica se o Ticket esta ativo para poder ser finalizado.
                 {
                     Console.Clear();
 
                     //Calcula quanto tempo o Veiculo ficou no estacionamento e armazena na variavel 'duracao'.
-                    TimeSpan duracao = DateTime.Now.Subtract(ticket.ListaTickets[index].DataEntrada);
+                    TimeSpan duracao = DateTime.Now.Subtract(DateTime.Parse(itemTicket[2]));
 
                     //Armazena no Ticket a DataSaida.
-                    ticket.ListaTickets[index].DataSaida = DateTime.Now;
+                    itemTicket[3] = DateTime.Now.ToString();
 
                     //Calcula o Valor do Ticket.
-                    ticket.ListaTickets[index].Valor = 1.50 * (Math.Ceiling(duracao.TotalMinutes / 15));
+                    itemTicket[4] = (1.50 * (Math.Ceiling(duracao.TotalMinutes / 15))).ToString();
 
                     //Atualiza as Vagas no Patio.
                     patio.Vagas_Ocupadas--;
 
                     //Busca o Cliente e o Veiculo presentes no Ticket.
-                    var tic = BuscarTicket(id_Ticket);
-                    var vei = BuscarVeiculo(tic.Id_Veiculo);
-                    var cli = BuscarCliente(vei.Id_Dono);
+                    var vei = BuscarVeiculo(itemTicket[1]);
+                    var itemVeiculo = vei.Split(",");
+
+                    var cli = BuscarCliente(itemVeiculo[1]);
+                    var itemCliente = cli.Split(",");
 
                     //Retorna uma String com o Ticket atualizado.
                     return $"-----Ticket Finalizado com Sucesso!-----\n" +
-                        $"Ticket: {tic.Id_Ticket} \n" +
-                        $"Veiculo: {tic.Id_Veiculo}  - {vei.Marca} - {vei.Modelo} \n" +
-                        $"Dono: {cli.Id} - {cli.Nome} \n" +
-                        $"Entrada: {tic.DataEntrada} \n" +
-                        $"Saida: {tic.DataSaida} \n" +
-                        $"Valor: { tic.Valor} \n\n";
+                        $"Ticket: {itemTicket[0]} \n" +
+                        $"Veiculo: {itemVeiculo[0]}  - {itemVeiculo[2]} - {itemVeiculo[3]} \n" +
+                        $"Dono: {itemCliente[0]} - {itemCliente[1]} \n" +
+                        $"Entrada: {itemTicket[2]} \n" +
+                        $"Saida: {itemTicket[3]} \n" +
+                        $"Valor: {itemTicket[4]} \n\n";
                 }
                 else
                 {
-                    return "\nTicket Inativo!";
+                    throw new Exception("\nTicket Inativo!");
                 }
             }
             else
             {
-                return "\nTicket não Encontrado!\n";
+                throw new Exception("\nTicket não Encontrado!\n");
             }
         }
 
         //Retorna uma Listagem com todos os Ticket's que estão ativos, quando o veiculo ainda esta no estacionamento.
         public string ListagemTicketsAtivos()
         {
-            string listaTic = "";
+            var listaTic = "";
 
-            foreach (var ticket in ticket.ListaTickets)
+            using (FileStream fs = new FileStream(diretorioTicket, FileMode.Open))
             {
-                if (ticket.DataSaida == null) //Se a DataSaida é igual null, significa que o Ticket ainda esta ativo.
+                using (StreamReader sr = new StreamReader(fs))
                 {
-                    var vei = BuscarVeiculo(ticket.Id_Veiculo);
-                    var cli = BuscarCliente(vei.Id_Dono);
+                    while (!sr.EndOfStream)
+                    {
+                        var linhaTic = sr.ReadLine().Split(",");
 
-                    listaTic += $"Ticket: {ticket.Id_Ticket} \n" +
-                        $"Veiculo: {ticket.Id_Veiculo}  - {vei.Marca} - {vei.Modelo} \n" +
-                        $"Dono: {cli.Id} - {cli.Nome} \n" +
-                        $"Entrada: {ticket.DataEntrada} \n" +
-                        $"Saida: {ticket.DataSaida} \n\n";
+                        if (linhaTic[3] == "")
+                        {
+                            var vei = BuscarVeiculo(linhaTic[1]);
+                            var linhaVei = vei.Split(",");
+
+                            var cli = BuscarCliente(linhaVei[1]);
+                            var linhaCli = cli.Split(",");
+
+                            listaTic += $"Ticket: {linhaTic[0]} \n" +
+                                  $"Veiculo: {linhaVei[0]}  - {linhaVei[2]} - {linhaVei[3]} \n" +
+                                  $"Dono: {linhaCli[0]} - {linhaCli[1]} \n" +
+                                  $"Entrada: {linhaTic[2]} \n" +
+                                  $"\n\n";
+                        }            
+                    }
                 }
             }
             return listaTic;
@@ -276,77 +343,115 @@ namespace Projeto.Service
         //Retorna uma Listagem com todos os Ticket's que ja foram finalizados.
         public string ListagemTicketsFinalizados()
         {
-            string listaTic = "";
+            var listaTic = "";
 
-            foreach (var ticket in ticket.ListaTickets)
+            using (FileStream fs = new FileStream(diretorioTicket, FileMode.Open))
             {
-                if (ticket.DataSaida != null) //Se a DataSaida é diferente de null, significa que o Ticket foi finalizado.
+                using (StreamReader sr = new StreamReader(fs))
                 {
-                    var vei = BuscarVeiculo(ticket.Id_Veiculo);
-                    var cli = BuscarCliente(vei.Id_Dono);
+                    while (!sr.EndOfStream)
+                    {
+                        var linhaTic = sr.ReadLine().Split(",");
 
-                    listaTic += $"Ticket: {ticket.Id_Ticket} \n" +
-                        $"Veiculo: {ticket.Id_Veiculo}  - {vei.Marca} - {vei.Modelo} \n" +
-                        $"Dono: {cli.Id} - {cli.Nome} \n" +
-                        $"Entrada: {ticket.DataEntrada} \n" +
-                        $"Saida: {ticket.DataSaida} \n" +
-                        $"Valor: {ticket.Valor} \n\n";
+                        if (linhaTic[3] != "")
+                        {
+                            var vei = BuscarVeiculo(linhaTic[1]);
+                            var linhaVei = vei.Split(",");
+
+                            var cli = BuscarCliente(linhaVei[1]);
+                            var linhaCli = cli.Split(",");
+
+                            listaTic += $"Ticket: {linhaTic[0]} \n" +
+                                  $"Veiculo: {linhaVei[0]}  - {linhaVei[2]} - {linhaVei[3]} \n" +
+                                  $"Dono: {linhaCli[0]} - {linhaCli[1]} \n" +
+                                  $"Entrada: {linhaTic[2]} \n" +
+                                  $"\n\n";
+                        }
+                    }
                 }
             }
             return listaTic;
         }
 
-        //Busca um Veiculo pelo ID e retorna.
-        private Veiculo BuscarVeiculo(string id_Veiculo)
+        //Busca um Cliente pelo ID e retorna a String correspondente a Linha do Cliente.
+        private string BuscarCliente(string id_Cliente)
         {
-            for (int i = 0; i <= veiculo.ListaVeiculos.Count - 1; i++)
+            var cli = "";
+
+            FileStream fs = null;
+            StreamReader sr = null;
+
+            using (fs = new FileStream(diretorioCliente, FileMode.Open))
             {
-                if (veiculo.ListaVeiculos[i].Id_Placa == id_Veiculo)
+                using (sr = new StreamReader(fs))
                 {
-                    return veiculo.ListaVeiculos[i];
+                    bool encontrado = false;
+
+                    while (!sr.EndOfStream && encontrado == false)
+                    {
+                        var linha = sr.ReadLine().Split(",");
+
+                        if (linha[0] == id_Cliente)
+                        {
+                            cli = $"{linha[0]},{linha[1]},{linha[2]}";
+                            encontrado = true;
+                        }
+                    }
                 }
             }
-            return null;
+            return cli;
         }
 
-        //Busca um Cliente pelo ID e retorna.
-        private Cliente BuscarCliente(string id_Cliente)
+        //Busca um Veiculo pelo ID e retorna a String correspondente a Linha do Veiculo.
+        private string BuscarVeiculo(string id_Veiculo)
         {
-            for (int i = 0; i <= cliente.ListaCliente.Count - 1; i++)
+            var vei = "";
+
+            using (FileStream fs = new FileStream(diretorioVeiculo, FileMode.Open))
             {
-                if (cliente.ListaCliente[i].Id == id_Cliente)
+                using (StreamReader sr = new StreamReader(fs))
                 {
-                    return cliente.ListaCliente[i];
+                    bool encontrado = false;
+
+                    while (!sr.EndOfStream && encontrado == false)
+                    {
+                        var linha = sr.ReadLine().Split(",");
+
+                        if (linha[0] == id_Veiculo)
+                        {
+                            vei = $"{linha[0]},{linha[1]},{linha[2]},{linha[3]}";
+                            encontrado = true;
+                        }
+                    }
                 }
             }
-            return null;
+            return vei;
         }
 
-        //Busca um Ticket pelo ID e retorna.
-        private Ticket BuscarTicket(string id_Ticket)
+        //Busca um Ticket pelo ID e retorna a String correspondente a Linha do Ticket.
+        private string BuscarTicket(string id_Ticket)
         {
-            for (int i = 0; i <= ticket.ListaTickets.Count - 1; i++)
-            {
-                if (ticket.ListaTickets[i].Id_Ticket == id_Ticket)
-                {
-                    return ticket.ListaTickets[i];
-                }
-            }
-            return null;
-        }
+            var tic = "";
 
-        //Busca um Ticket na Lista e retorna o Index dele na Lista.
-        //Utilizado para realizar alterações no Ticket dentro da Lista Ticket, por isso é necessário obter o Index.
-        private int BuscarIndexTicket(string id_Ticket)
-        {
-            for (int i = 0; i <= ticket.ListaTickets.Count - 1; i++)
+            using (FileStream fs = new FileStream(diretorioTicket, FileMode.Open))
             {
-                if (ticket.ListaTickets[i].Id_Ticket == id_Ticket)
+                using (StreamReader sr = new StreamReader(fs))
                 {
-                    return i;
+                    bool encontrado = false;
+
+                    while (!sr.EndOfStream && encontrado == false)
+                    {
+                        var linha = sr.ReadLine().Split(",");
+
+                        if (linha[0] == id_Ticket)
+                        {
+                            tic = $"{linha[0]},{linha[1]},{linha[2]},{linha[3]},{linha[4]}";
+                            encontrado = true;
+                        }
+                    }
                 }
             }
-            return -1;
+            return tic;
         }
 
         public Patio PatioEstacionamento()
@@ -354,49 +459,59 @@ namespace Projeto.Service
             return patio;
         }
 
-        //Retorna Listagem contendo todos os Veiculos presentes no Estacionamento.
-        public string ListaEstacionamento()
-        {
-            var listaEstacionamento = "";
+        ////Retorna Listagem contendo todos os Veiculos presentes no Estacionamento.
+        //public string ListaEstacionamento()
+        //{
+        //    var listaEstacionamento = "";
 
-            foreach (var ticket in ticket.ListaTickets)
-            {
-                if (ticket.DataSaida == null)
-                {
-                    var vei = BuscarVeiculo(ticket.Id_Veiculo);
-                    var cli = BuscarCliente(vei.Id_Dono);
+        //    foreach (var ticket in ticket.ListaTickets)
+        //    {
+        //        if (ticket.DataSaida == null)
+        //        {
+        //            var vei = BuscarVeiculo(ticket.Id_Veiculo);
+        //            var cli = BuscarCliente(vei.Id_Dono);
 
-                    listaEstacionamento += $"Veiculo: {ticket.Id_Veiculo} - {vei.Marca} - {vei.Modelo} \nDono: {cli.Id} - {cli.Nome} \n\n";
-                }
-            }
-            return listaEstacionamento;
-        }
+        //            listaEstacionamento += $"Veiculo: {ticket.Id_Veiculo} - " +
+        //                $"{vei.Marca} - {vei.Modelo} \n" +
+        //                $"Dono: {cli.Id} - {cli.Nome} \n\n";
+        //        }
+        //    }
+        //    return listaEstacionamento;
+        //}
 
         //Verifica se um determinado Veiculo se encontra no estacionamento.
-        public bool VerificarVeiculoEstacionado(string placa)
+        private bool VerificarVeiculoEstacionado(string placa)
         {
-            foreach (var ticket in ticket.ListaTickets)
+            using (FileStream fs = new FileStream(diretorioTicket, FileMode.Open))
             {
-                if (ticket.DataSaida == null && ticket.Id_Veiculo == placa)
+                using (StreamReader sr = new StreamReader(fs))
                 {
-                    return true;
+                    while (!sr.EndOfStream)
+                    {
+                        var linha = sr.ReadLine().Split(",");
+
+                        if (linha[1] == placa && linha[3] == "")
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
-            return false;
+            return false;     
         }
 
-        //Calcula o valor total arrecadado nos Ticket's em determinado Período.
-        public double ValorPorPeriodo(DateTime dataInicial, DateTime dataFinal)
-        {
-            double total = 0.00;
-            foreach (var ticket in ticket.ListaTickets)
-            {
-                if (ticket.DataSaida >= dataInicial && ticket.DataSaida <= dataFinal)
-                {
-                    total += ticket.Valor;
-                }
-            }
-            return total;
-        }
+        ////Calcula o valor total arrecadado nos Ticket's em determinado Período.
+        //public double ValorPorPeriodo(DateTime dataInicial, DateTime dataFinal)
+        //{
+        //    double total = 0.00;
+        //    foreach (var ticket in ticket.ListaTickets)
+        //    {
+        //        if (ticket.DataSaida >= dataInicial && ticket.DataSaida <= dataFinal)
+        //        {
+        //            total += ticket.Valor;
+        //        }
+        //    }
+        //    return total;
+        //}
     }
 }
