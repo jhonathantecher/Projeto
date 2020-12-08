@@ -8,12 +8,11 @@ using System.IO;
 namespace Projeto.Service
 {
     public class Servico
-    {
-        Patio patio = new Patio();
-
+    { 
         string diretorioCliente = @"C:\Users\jhonathan.rowinski\Desktop\Cliente.txt";
         string diretorioVeiculo = @"C:\Users\jhonathan.rowinski\Desktop\Veiculo.txt";
         string diretorioTicket = @"C:\Users\jhonathan.rowinski\Desktop\Ticket.txt";
+        string diretorioPatio = @"C:\Users\jhonathan.rowinski\Desktop\Patio.txt";
 
         public bool ValidacaoCPF(string cpf)
         {
@@ -214,16 +213,22 @@ namespace Projeto.Service
                 //Dessa forma um Ticket não pode ser gerado duas vezes para o mesmo Veiculo.
                 if (VerificarVeiculoEstacionado(placa) == false)
                 {
+                    var pat = BuscarPatio();
+                    var itemPatio = pat.Split(",");
                     //Verifica se há Vagas disponiveis.
-                    if (patio.Vagas_Ocupadas < patio.Capacidade_Total)
+                    if (int.Parse(itemPatio[2]) < int.Parse(itemPatio[1]))
                     {
                         //Se o veiculo existir e houverem Vagas Disponiveis, o Ticket é gerado.
-                        var tic = new Ticket(
-                            (QuantidadeLinhasTXT(diretorioTicket) + 1).ToString(),
-                            placa,
-                            DateTime.Now);
+                        var tic = new Ticket((QuantidadeLinhasTXT(diretorioTicket) + 1).ToString(), placa, DateTime.Now);
 
-                        patio.Vagas_Ocupadas++;
+                        itemPatio[2] = (int.Parse(itemPatio[2]) + 1).ToString();
+
+                        //Realiza a Leitura do Arquivo onde estão os dados.
+                        string text = File.ReadAllText(diretorioPatio);
+                        //Troca a linha onde esta o Patio atualizando os dados.
+                        text = text.Replace(pat, $"{itemPatio[0]},{itemPatio[1]},{itemPatio[2]}");
+                        //Salva as informações novamente.
+                        File.WriteAllText(diretorioPatio, text);
 
                         SalvarTicket(tic);
 
@@ -262,8 +267,12 @@ namespace Projeto.Service
 
             if (tic != "")
             {
+                //Se o Ticket existir, armazena seus dados no Vetor.
+                //Os itens[] virão listados na mesma ordem de cadastro.
+                //Portanto itemTicket[0] por exemplo é o ID do Ticket, e assim por diante. 
                 var itemTicket = tic.Split(",");
 
+                //Item Ticket[3] é a DataSaida.
                 if (itemTicket[3] == "") //Verifica se o Ticket esta ativo para poder ser finalizado.
                 {
                     Console.Clear();
@@ -275,10 +284,26 @@ namespace Projeto.Service
                     itemTicket[3] = DateTime.Now.ToString();
 
                     //Calcula o Valor do Ticket.
-                    itemTicket[4] = (1.50 * (Math.Ceiling(duracao.TotalMinutes / 15))).ToString();
+                    itemTicket[4] = (1.50 * (Math.Ceiling(duracao.TotalMinutes / 15))).ToString().Replace(".","").Replace(",",".");
 
                     //Atualiza as Vagas no Patio.
-                    patio.Vagas_Ocupadas--;
+                    var pat = BuscarPatio();
+                    var itemPatio = pat.Split(",");
+
+                    itemPatio[2] = (int.Parse(itemPatio[2]) - 1).ToString();
+
+                    string text = File.ReadAllText(diretorioPatio);
+                    text = text.Replace(pat, $"{itemPatio[0]},{itemPatio[1]},{itemPatio[2]}");
+                    File.WriteAllText(diretorioPatio, text);
+                    
+                    //Realiza a Leitura do Arquivo onde estão os dados.
+                    text = File.ReadAllText(diretorioTicket);
+                   
+                    //Troca a linha onde esta o Ticket atualizando os dados.
+                    text = text.Replace(tic, $"{itemTicket[0]},{itemTicket[1]},{itemTicket[2]},{itemTicket[3]},{itemTicket[4]}");
+                    
+                    //Salva as informações novamente.
+                    File.WriteAllText(diretorioTicket, text);
 
                     //Busca o Cliente e o Veiculo presentes no Ticket.
                     var vei = BuscarVeiculo(itemTicket[1]);
@@ -365,6 +390,8 @@ namespace Projeto.Service
                                   $"Veiculo: {linhaVei[0]}  - {linhaVei[2]} - {linhaVei[3]} \n" +
                                   $"Dono: {linhaCli[0]} - {linhaCli[1]} \n" +
                                   $"Entrada: {linhaTic[2]} \n" +
+                                  $"Saída: {linhaTic[3]} \n" +
+                                  $"Valor: {linhaTic[4]} \n" +
                                   $"\n\n";
                         }
                     }
@@ -378,12 +405,9 @@ namespace Projeto.Service
         {
             var cli = "";
 
-            FileStream fs = null;
-            StreamReader sr = null;
-
-            using (fs = new FileStream(diretorioCliente, FileMode.Open))
+            using (FileStream fs = new FileStream(diretorioCliente, FileMode.Open))
             {
-                using (sr = new StreamReader(fs))
+                using (StreamReader sr = new StreamReader(fs))
                 {
                     bool encontrado = false;
 
@@ -454,30 +478,55 @@ namespace Projeto.Service
             return tic;
         }
 
-        public Patio PatioEstacionamento()
+        public string BuscarPatio()
         {
-            return patio;
+            var pat = "";
+
+            using (FileStream fs = new FileStream(diretorioPatio, FileMode.Open))
+            {
+                using (StreamReader sr = new StreamReader(fs))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        var linha = sr.ReadLine().Split(",");
+
+                        if (linha[0] == "1")
+                        {
+                            pat = $"{linha[0]},{linha[1]},{linha[2]}";
+                        }
+                    }
+                }
+            }
+            return pat;
         }
 
-        ////Retorna Listagem contendo todos os Veiculos presentes no Estacionamento.
-        //public string ListaEstacionamento()
-        //{
-        //    var listaEstacionamento = "";
+        //Retorna Listagem contendo todos os Veiculos presentes no Estacionamento.
+        public string ListaEstacionamento()
+        {
+            var listaEstacionamento = "";
 
-        //    foreach (var ticket in ticket.ListaTickets)
-        //    {
-        //        if (ticket.DataSaida == null)
-        //        {
-        //            var vei = BuscarVeiculo(ticket.Id_Veiculo);
-        //            var cli = BuscarCliente(vei.Id_Dono);
+            using (FileStream fs = new FileStream(diretorioTicket, FileMode.Open))
+            {
+                using (StreamReader sr = new StreamReader(fs))
+                {                   
+                    while (!sr.EndOfStream)
+                    {
+                        var itemTicket = sr.ReadLine().Split(",");
 
-        //            listaEstacionamento += $"Veiculo: {ticket.Id_Veiculo} - " +
-        //                $"{vei.Marca} - {vei.Modelo} \n" +
-        //                $"Dono: {cli.Id} - {cli.Nome} \n\n";
-        //        }
-        //    }
-        //    return listaEstacionamento;
-        //}
+                        var vei = BuscarVeiculo(itemTicket[1]);
+                        var itemVeiculo = vei.Split(",");
+
+                        var cli = BuscarCliente(itemVeiculo[1]);
+                        var itemCliente = cli.Split(",");
+
+                        listaEstacionamento += $"Veiculo: {itemVeiculo[0]} - " +
+                        $"{itemVeiculo[2]} - {itemVeiculo[3]} \n" +
+                        $"Dono: {itemCliente[0]} - {itemCliente[1]} \n\n";
+                    }
+                }
+            }
+            return listaEstacionamento;
+        }
 
         //Verifica se um determinado Veiculo se encontra no estacionamento.
         private bool VerificarVeiculoEstacionado(string placa)
@@ -500,18 +549,30 @@ namespace Projeto.Service
             return false;     
         }
 
-        ////Calcula o valor total arrecadado nos Ticket's em determinado Período.
-        //public double ValorPorPeriodo(DateTime dataInicial, DateTime dataFinal)
-        //{
-        //    double total = 0.00;
-        //    foreach (var ticket in ticket.ListaTickets)
-        //    {
-        //        if (ticket.DataSaida >= dataInicial && ticket.DataSaida <= dataFinal)
-        //        {
-        //            total += ticket.Valor;
-        //        }
-        //    }
-        //    return total;
-        //}
+        //Calcula o valor total arrecadado nos Ticket's em determinado Período.
+        public double ValorPorPeriodo(DateTime dataInicial, DateTime dataFinal)
+        {
+            double total = 0.00;
+
+            using (FileStream fs = new FileStream(diretorioTicket, FileMode.Open))
+            {
+                using (StreamReader sr = new StreamReader(fs))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        var itemTicket = sr.ReadLine().Split(",");
+
+                        if (itemTicket[3] != "")
+                        {
+                            if (DateTime.Parse(itemTicket[3]) >= dataInicial && DateTime.Parse(itemTicket[3]) <= dataFinal)
+                            {
+                                total += Double.Parse(itemTicket[4].Replace(".",","));
+                            }
+                        }                  
+                    }
+                }
+            }
+            return total;
+        }
     }
 }

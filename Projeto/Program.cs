@@ -189,7 +189,7 @@ namespace Projeto
             Console.WriteLine("1 - Selecionar Período");
             Console.WriteLine("2 - Voltar");
             Console.WriteLine("3 - Sair");
-            //Console.WriteLine($"Valor arrecadado hoje: { servico.ValorPorPeriodo(DateTime.Today, DateTime.Now).ToString("F2") }");
+            Console.WriteLine($"Valor arrecadado hoje: { servico.ValorPorPeriodo(DateTime.Today, DateTime.Now).ToString("F2") }");
             Console.WriteLine("-----------------------------");
             Console.WriteLine();
 
@@ -217,17 +217,18 @@ namespace Projeto
         static void MenuPatio()
         {
             Console.Clear();
-            Patio patio = servico.PatioEstacionamento();
+            var patio = servico.BuscarPatio();
+            var itemPatio = patio.Split(",");
 
             Console.WriteLine("-------------------------Controle de Patio-------------------------");
-            Console.WriteLine($"Capacidade Total: {patio.Capacidade_Total} - " +
-                $"Vagas Ocupadas: { patio.Vagas_Ocupadas } - " +
-                $"Vagas Disponiveis: { patio.Capacidade_Total - patio.Vagas_Ocupadas}");
+            Console.WriteLine($"Capacidade Total: {itemPatio[1]} - " +
+                $"Vagas Ocupadas: {itemPatio[2]} - " +
+                $"Vagas Disponiveis: {int.Parse(itemPatio[1]) - int.Parse(itemPatio[2])}");
             Console.WriteLine("-------------------------------------------------------------------");
 
-            //var listaEstacionamento = servico.ListaEstacionamento();
+            var listaEstacionamento = servico.ListaEstacionamento();
 
-            //Console.WriteLine(listaEstacionamento);
+            Console.WriteLine(listaEstacionamento);
 
             Console.WriteLine("Pressione qualquer tecla para voltar...");
             Console.ReadLine();
@@ -471,10 +472,10 @@ namespace Projeto
             DateTime dataFinal = DateTime.Parse(date);
 
             //Recebe o valor total do período chamando a função.
-            //double valor = servico.ValorPorPeriodo(dataInicial, dataFinal);
+            double valor = servico.ValorPorPeriodo(dataInicial, dataFinal);
 
             Console.Clear();
-            //Console.WriteLine($"Valor Arrecadado no Período Informado: {valor.ToString("F2")} ");
+            Console.WriteLine($"Valor Arrecadado no Período Informado: {valor.ToString("F2")} ");
             Console.WriteLine("Pressione qualquer tecla para voltar...");
             Console.ReadLine();
 
