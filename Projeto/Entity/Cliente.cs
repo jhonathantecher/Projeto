@@ -5,12 +5,10 @@ namespace Projeto.Entity
 {
     public class Cliente
     {
-        public string Id { get; private set; }
+        public string Id { get; set; }
         public string Nome { get; set; }
         public TipoCliente TipoCliente { get; set; }
 
-
-        public List<Cliente> ListaCliente = new List<Cliente>();
 
         public Cliente(){}
 

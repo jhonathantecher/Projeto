@@ -6,13 +6,11 @@ namespace Projeto.Entity
 {
     public class Veiculo
     {
-        public string Id { get; private set; }
+        public string Id { get; set; }
         public string Id_Dono { get; set; }
         public string Marca { get; set; }
         public string Modelo { get; set; }
 
-
-        public List<Veiculo> ListaVeiculos = new List<Veiculo>();
 
         public Veiculo(){}
 
