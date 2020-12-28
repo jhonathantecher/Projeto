@@ -268,7 +268,7 @@ namespace Projeto
                                   $"Vagas Disponiveis: {patio.Capacidade_Total - patio.Vagas_Ocupadas}");
                 Console.WriteLine("-------------------------------------------------------------------");
 
-                var listaEstacionamento = servico.listagemTicketsAtivosOuEstacionamento(false);
+                var listaEstacionamento = servico.ListagemEstacionamento();
 
                 Console.WriteLine(listaEstacionamento);
 
@@ -480,7 +480,7 @@ namespace Projeto
             {
                 Console.Clear();
 
-                var tickets = servico.listagemTicketsAtivosOuEstacionamento(true);
+                var tickets = servico.ListagemTicketsAtivos();
 
                 Console.Write(tickets);
 

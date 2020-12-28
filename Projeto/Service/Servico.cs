@@ -348,38 +348,22 @@ namespace Projeto.Service
         #region "Buscas"
         private Cliente BuscarCliente(string id_Cliente)
         {
-            var cliente = ListClientes.Where(cliente => cliente.Id == id_Cliente).ToList();
-
-            if (cliente.Count != 0)
-                return cliente[0];
-            return null;
+            return ListClientes.Where(cliente => cliente.Id == id_Cliente).FirstOrDefault();
         }
 
         private Veiculo BuscarVeiculo(string id_Veiculo)
         {
-            var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == id_Veiculo).ToList();
-
-            if (veiculo.Count != 0)
-                return veiculo[0];
-            return null;
+            return ListVeiculos.Where(veiculo => veiculo.Id == id_Veiculo).FirstOrDefault();
         }
 
         private Ticket BuscarTicket(string id_Ticket)
         {
-            var ticket = ListTickets.Where(ticket => ticket.Id == id_Ticket).ToList();
-
-            if (ticket.Count != 0)
-                return ticket[0];
-            return null;
+            return ListTickets.Where(ticket => ticket.Id == id_Ticket).FirstOrDefault();
         }
 
         public Patio BuscarPatio()
-        {
-            var patio = ListPatio.Where(patio => patio.Id == 1).ToList();
-
-            if (patio.Count != 0)
-                return patio[0];
-            return null;
+        {      
+            return ListPatio.Where(patio => patio.Id == 1).FirstOrDefault();
         }
         #endregion
 
@@ -398,30 +382,49 @@ namespace Projeto.Service
             var listaVeiculos = $"-------------------------Veículos-------------------------\n";
             foreach (var veiculo in ListVeiculos)
             {
-                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).ToList();
+                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).FirstOrDefault();
 
                 listaVeiculos += $"Placa: {veiculo.Id} \n" +
                                  $"Marca: {veiculo.Marca} \n" +
                                  $"Modelo: {veiculo.Modelo} \n" +
-                                 $"Dono: {cliente[0].Id} - {cliente[0].Nome} \n\n";
+                                 $"Dono: {cliente.Id} - {cliente.Nome} \n\n";
             }
             return listaVeiculos;
+        }
+
+        //Retorna uma Listagem com todos os Ticket's ativos.
+        public string ListagemTicketsAtivos()
+        {
+            var listaTickets = "--------------------Ticket's Ativos--------------------\n";
+            var ticketsAtivos = ListTickets.Where(ticket => ticket.DataSaida == null).ToList();
+
+            foreach (var ticket in ticketsAtivos)
+            {
+                var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == ticket.Id_Veiculo).FirstOrDefault();
+                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).FirstOrDefault();
+
+                listaTickets += $"Ticket: {ticket.Id} \n" +
+                                $"Veiculo: {veiculo.Id}  - {veiculo.Marca} - {veiculo.Modelo} \n" +
+                                $"Dono: {cliente.Id} - {cliente.Nome} \n" +
+                                $"Entrada: {ticket.DataEntrada} \n\n";
+            }
+            return listaTickets;
         }
 
         //Retorna uma Listagem com todos os Ticket's que ja foram finalizados.
         public string ListagemTicketsFinalizados()
         {
             var listaTickets = "--------------------Ticket's Finalizados--------------------\n";
-            var ticketsAtivos = ListTickets.Where(ticket => ticket.DataSaida != null).ToList();
+            var ticketsFinalizados = ListTickets.Where(ticket => ticket.DataSaida != null).ToList();
 
-            foreach (var ticket in ticketsAtivos)
+            foreach (var ticket in ticketsFinalizados)
             {
-                var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == ticket.Id_Veiculo).ToList();
-                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo[0].Id_Dono).ToList();
+                var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == ticket.Id_Veiculo).FirstOrDefault();
+                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).FirstOrDefault();
 
                 listaTickets += $"Ticket: {ticket.Id} \n" +
-                                $"Veiculo: {veiculo[0].Id}  - {veiculo[0].Marca} - {veiculo[0].Modelo} \n" +
-                                $"Dono: {cliente[0].Id} - {cliente[0].Nome} \n" +
+                                $"Veiculo: {veiculo.Id}  - {veiculo.Marca} - {veiculo.Modelo} \n" +
+                                $"Dono: {cliente.Id} - {cliente.Nome} \n" +
                                 $"Entrada: {ticket.DataEntrada} \n" +
                                 $"Saída: {ticket.DataSaida} \n" +
                                 $"Valor: {ticket.Valor} \n\n";
@@ -429,29 +432,20 @@ namespace Projeto.Service
             return listaTickets;
         }
 
-        //Retorna uma listagem contendo os Tickets ativos ou a listagem dos veículos que estao no estacionamento.
-        public string listagemTicketsAtivosOuEstacionamento(bool opcao)
+        //Retorna uma Listagem dos veículos que estao no estacionamento.
+        public string ListagemEstacionamento()
         {
-            var listaTickets = "--------------------Ticket's Ativos--------------------\n";
             var listaEstacionamento = "";
             var ticketsAtivos = ListTickets.Where(ticket => ticket.DataSaida == null).ToList();
 
             foreach (var ticket in ticketsAtivos)
             {
-                var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == ticket.Id_Veiculo).ToList();
-                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo[0].Id_Dono).ToList();
+                var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == ticket.Id_Veiculo).FirstOrDefault();
+                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).FirstOrDefault();
 
-                listaTickets += $"Ticket: {ticket.Id} \n" +
-                                $"Veiculo: {veiculo[0].Id}  - {veiculo[0].Marca} - {veiculo[0].Modelo} \n" +
-                                $"Dono: {cliente[0].Id} - {cliente[0].Nome} \n" +
-                                $"Entrada: {ticket.DataEntrada} \n\n";
-
-                listaEstacionamento += $"Veiculo: {veiculo[0].Id}  - {veiculo[0].Marca} - {veiculo[0].Modelo} \n" +
-                                       $"Dono: {cliente[0].Id} - {cliente[0].Nome} \n\n";
+                listaEstacionamento += $"Veiculo: {veiculo.Id}  - {veiculo.Marca} - {veiculo.Modelo} \n" +
+                                       $"Dono: {cliente.Id} - {cliente.Nome} \n\n";
             }
-
-            if (opcao)
-                return listaTickets;
             return listaEstacionamento;
         }
         #endregion
@@ -460,12 +454,9 @@ namespace Projeto.Service
         //Calcula o valor total arrecadado nos Ticket's em determinado Período.
         public double ValorPorPeriodo(DateTime dataInicial, DateTime dataFinal)
         {
-            double total = 0.00;
-
-            var ticketsFinalizados = ListTickets.Where(ticket => ticket.DataSaida != null && ticket.DataEntrada >= dataInicial && ticket.DataSaida <= dataFinal).ToList();
-            ticketsFinalizados.ForEach(ticket => total += ticket.Valor);
-
-            return total;
+            return ListTickets
+                .Where(ticket => ticket.DataSaida != null && ticket.DataEntrada >= dataInicial && ticket.DataSaida <= dataFinal)
+                .Sum(ticket => ticket.Valor);
         }
         #endregion
 
