@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace Projeto.Service
 {
-    public class Servico
+    public class ClienteService
     {
         #region "Diretórios e Lists"
         string diretorioCliente = @"C:\Users\jhonathan.rowinski\Desktop\Cliente.txt";
@@ -24,7 +24,7 @@ namespace Projeto.Service
         List<Patio> ListPatio = new List<Patio>();
         #endregion
 
-        public Servico()
+        public ClienteService()
         {
             if (!File.Exists(diretorioCliente))
                 using (File.Create(diretorioCliente)) { }
@@ -128,10 +128,10 @@ namespace Projeto.Service
 
             if (clienteExiste == null)
             {
-                var cli = new Cliente(cpf, nome, TipoCliente.Fixo);
+                //var cli = new Cliente(cpf, nome, TipoCliente.Fixo);
 
-                SalvarCliente(cli);
-                ListClientes.Add(cli);
+                //SalvarCliente(cli);
+                //ListClientes.Add(cli);
 
                 Console.WriteLine("\nCadastrado com Sucesso!");
                 Thread.Sleep(1000);
@@ -181,9 +181,9 @@ namespace Projeto.Service
                 idCliente = (ListClientes.Count + 1).ToString();
 
                 //Cria um ClientePassante e salva.
-                var cli = new Cliente(idCliente, nome, TipoCliente.Passante);
-                SalvarCliente(cli);
-                ListClientes.Add(cli);
+                //var cli = new Cliente(idCliente, nome, TipoCliente.Passante);
+                //SalvarCliente(cli);
+                //ListClientes.Add(cli);
             }
 
             var vei = new Veiculo(placa, idCliente, marca, modelo);
@@ -382,7 +382,7 @@ namespace Projeto.Service
             var listaVeiculos = $"-------------------------Veículos-------------------------\n";
             foreach (var veiculo in ListVeiculos)
             {
-                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).FirstOrDefault();
+                var cliente = ListClientes.Where(c => c.Id == veiculo.Id_Dono).FirstOrDefault();
 
                 listaVeiculos += $"Placa: {veiculo.Id} \n" +
                                  $"Marca: {veiculo.Marca} \n" +
@@ -400,8 +400,8 @@ namespace Projeto.Service
 
             foreach (var ticket in ticketsAtivos)
             {
-                var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == ticket.Id_Veiculo).FirstOrDefault();
-                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).FirstOrDefault();
+                var veiculo = ListVeiculos.Where(v => v.Id == ticket.Id_Veiculo).FirstOrDefault();
+                var cliente = ListClientes.Where(c => c.Id == veiculo.Id_Dono).FirstOrDefault();
 
                 listaTickets += $"Ticket: {ticket.Id} \n" +
                                 $"Veiculo: {veiculo.Id}  - {veiculo.Marca} - {veiculo.Modelo} \n" +
@@ -419,8 +419,8 @@ namespace Projeto.Service
 
             foreach (var ticket in ticketsFinalizados)
             {
-                var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == ticket.Id_Veiculo).FirstOrDefault();
-                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).FirstOrDefault();
+                var veiculo = ListVeiculos.Where(v => v.Id == ticket.Id_Veiculo).FirstOrDefault();
+                var cliente = ListClientes.Where(c => c.Id == veiculo.Id_Dono).FirstOrDefault();
 
                 listaTickets += $"Ticket: {ticket.Id} \n" +
                                 $"Veiculo: {veiculo.Id}  - {veiculo.Marca} - {veiculo.Modelo} \n" +
@@ -440,8 +440,8 @@ namespace Projeto.Service
 
             foreach (var ticket in ticketsAtivos)
             {
-                var veiculo = ListVeiculos.Where(veiculo => veiculo.Id == ticket.Id_Veiculo).FirstOrDefault();
-                var cliente = ListClientes.Where(cliente => cliente.Id == veiculo.Id_Dono).FirstOrDefault();
+                var veiculo = ListVeiculos.Where(v => v.Id == ticket.Id_Veiculo).FirstOrDefault();
+                var cliente = ListClientes.Where(c => c.Id == veiculo.Id_Dono).FirstOrDefault();
 
                 listaEstacionamento += $"Veiculo: {veiculo.Id}  - {veiculo.Marca} - {veiculo.Modelo} \n" +
                                        $"Dono: {cliente.Id} - {cliente.Nome} \n\n";
