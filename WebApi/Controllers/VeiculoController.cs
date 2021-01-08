@@ -8,31 +8,31 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ClienteController : ControllerBase
+    public class VeiculoController : ControllerBase
     {
-        ClienteService servico = new ClienteService();
+        VeiculoService servico = new VeiculoService();
 
-        // GET api/cliente
+        // GET: api/<VeiculoController>
         [HttpGet]
-        public ActionResult<List<Cliente>> Get()
+        public List<Veiculo> Get()
         {
-            return servico.ListagemClientes();
+            return servico.ListagemVeiculos();
         }
 
-        // GET api/cliente/5
+        // GET api/<VeiculoController>/5
         [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
+        public string Get(int id)
         {
             return "value";
         }
 
-        // POST api/cliente
+        // POST api/<VeiculoController>
         [HttpPost]
-        public ActionResult Post([FromBody] Cliente cliente)
+        public ActionResult Post([FromBody] Veiculo veiculo)
         {
             try
             {
-                this.servico.CadastrarCliente(cliente);
+                this.servico.CadastrarVeiculo(veiculo);
 
                 return Ok("Cadastrado com Sucesso!");
             }
@@ -42,13 +42,13 @@ namespace WebApi.Controllers
             }
         }
 
-        // PUT api/cliente/5
+        // PUT api/<VeiculoController>/5
         [HttpPut("{id}")]
-        public ActionResult Put([FromBody] Cliente cliente)
+        public ActionResult Put([FromBody] Veiculo veiculo)
         {
             try
             {
-                this.servico.AtuaizarCliente(cliente);
+                this.servico.AtualizarVeiculo(veiculo);
 
                 return Ok("Atualizado com Sucesso!");
             }
@@ -58,7 +58,7 @@ namespace WebApi.Controllers
             }
         }
 
-        // DELETE api/cliente/5
+        // DELETE api/<VeiculoController>/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {

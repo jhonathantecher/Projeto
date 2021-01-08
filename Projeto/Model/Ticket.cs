@@ -5,28 +5,29 @@ namespace Projeto.Entity
 {
     public class Ticket
     {
-        public string Id { get; set; }
-        public string Id_Veiculo { get; set; }
+        public int Id { get; set; }
+        public Veiculo Veiculo { get; set; }
+        public string VeiculoId { get; set; }
         public DateTime DataEntrada { get; set; }
         public DateTime? DataSaida { get; set; }
         public double Valor { get; set; }
 
-
         public Ticket(){}
 
-        public Ticket(string id, string id_Veiculo, DateTime dataEntrada)
+        public Ticket(string placa, Veiculo veiculo, DateTime dataEntrada)
         {
-            Id = id;
-            Id_Veiculo = id_Veiculo;
+            VeiculoId = placa;
+            Veiculo = veiculo;
             DataEntrada = dataEntrada;
             DataSaida = null;
             Valor = 0.00;
         }
 
-        public Ticket(string id, string id_Veiculo, DateTime dataEntrada, DateTime? dataSaida, double valor)
+        public Ticket(int id, Veiculo veiculo, string placa, DateTime dataEntrada, DateTime? dataSaida, double valor)
         {
             Id = id;
-            Id_Veiculo = id_Veiculo;
+            Veiculo = veiculo;
+            VeiculoId = placa;
             DataEntrada = dataEntrada;
             DataSaida = dataSaida;
             Valor = valor;
