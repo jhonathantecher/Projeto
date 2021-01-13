@@ -1,8 +1,8 @@
 ﻿namespace Projeto.Entity.Enum
 {
-    public enum TipoCliente
+    public enum TipoClienteEnum
     {
-        Passante = 1,
-        Fixo = 2
+        Padrao = 1,
+        Mensalista = 2
     }
 }

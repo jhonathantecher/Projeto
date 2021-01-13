@@ -1,81 +1,51 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Projeto.Entity;
 using Projeto.Service;
-using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace WebApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/ticket")]
     [ApiController]
     public class TicketController : ControllerBase
     {
         TicketService servico = new TicketService();
 
-        // GET: api/<TicketController>
-        [HttpGet("Finalizados")]
-        public List<Ticket> Get()
+        [HttpGet("Tickets")]
+        public async Task<List<Ticket>> Get()
         {
-            return servico.ListagemTickets();
+            return await servico.ListagemTickets();
         }
 
-        // GET: api/<TicketController>
         [HttpGet("Ativos")]
-        public List<Ticket> GetAtivos()
+        public async Task<List<Ticket>> GetAtivos()
         {
-            return servico.ListagemTicketsAtivos();
+            return await servico.ListagemTicketsAtivos();
         }
 
-        // GET: api/<TicketController>
         [HttpGet("Finalizados")]
-        public List<Ticket> GetFinalizados()
+        public async Task<List<Ticket>> GetFinalizados()
         {
-            return servico.ListagemTicketsAtivos();
+            return await servico.ListagemTicketsFinalizados();
         }
 
-        // GET api/<TicketController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<Ticket> Get(int id)
         {
-            return "value";
+            return await servico.BuscarTicket(id);
         }
 
-        // POST api/<TicketController>
-        [HttpPost]
-        public ActionResult Post(Ticket ticket)
-        {
-            try
-            {               
-                this.servico.CadastrarTicket(ticket);
-
-                return Ok("Cadastrado com Sucesso!");
-            }
-            catch (Exception e)
-            {
-                return BadRequest($"Error: {e.Message}");
-            }
+        [HttpPost("{placa}")]
+        public async Task<bool> Post(string placa)
+        {         
+            return await this.servico.CadastrarTicket(placa);
         }
 
-        // PUT api/<TicketController>/5
         [HttpPut("{id}")]
-        public ActionResult Put([FromBody] Ticket ticket)
+        public async Task<bool> Put(int id)
         {
-            try
-            {
-                this.servico.FinalizarTicket(ticket);
-
-                return Ok("Atualizado com Sucesso!");
-            }
-            catch (Exception e)
-            {
-                return BadRequest($"Error: {e.Message}");
-            }
-        }
-
-        // DELETE api/<TicketController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            return await this.servico.FinalizarTicket(id);
         }
     }
 }

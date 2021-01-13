@@ -1,67 +1,45 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Projeto.Entity;
 using Projeto.Service;
-using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace WebApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/cliente")]
     [ApiController]
     public class ClienteController : ControllerBase
     {
         ClienteService servico = new ClienteService();
 
-        // GET api/cliente
         [HttpGet]
-        public ActionResult<List<Cliente>> Get()
+        public async Task<List<Cliente>> Get()
         {
-            return servico.ListagemClientes();
+            return await this.servico.ListagemClientes();
         }
 
-        // GET api/cliente/5
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
+        [HttpGet("{cpf}")]
+        public async Task<Cliente> Get(string cpf)
         {
-            return "value";
+            return await this.servico.BuscarClienteCPF(cpf);
         }
 
-        // POST api/cliente
         [HttpPost]
-        public ActionResult Post([FromBody] Cliente cliente)
+        public async Task<bool> Post(Cliente cliente)
         {
-            try
-            {
-                this.servico.CadastrarCliente(cliente);
-
-                return Ok("Cadastrado com Sucesso!");
-            }
-            catch (Exception e)
-            {
-                return BadRequest($"Error: {e.Message}");
-            }
+            return await this.servico.CadastrarCliente(cliente);
         }
 
-        // PUT api/cliente/5
-        [HttpPut("{id}")]
-        public ActionResult Put([FromBody] Cliente cliente)
-        {
-            try
-            {
-                this.servico.AtuaizarCliente(cliente);
-
-                return Ok("Atualizado com Sucesso!");
-            }
-            catch (Exception e)
-            {
-                return BadRequest($"Error: {e.Message}");
-            }
+        [HttpPut]
+        public async Task<bool> Put(Cliente cliente)
+        {          
+            return await this.servico.AtuaizarCliente(cliente);
         }
 
-        // DELETE api/cliente/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<bool> Delete(int id)
         {
+            return await this.servico.ExcluirCliente(id);
         }
     }
 }

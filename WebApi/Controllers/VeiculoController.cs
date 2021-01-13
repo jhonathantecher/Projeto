@@ -1,67 +1,45 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Projeto.Entity;
 using Projeto.Service;
-using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace WebApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/veiculo")]
     [ApiController]
     public class VeiculoController : ControllerBase
     {
         VeiculoService servico = new VeiculoService();
 
-        // GET: api/<VeiculoController>
         [HttpGet]
-        public List<Veiculo> Get()
+        public async Task<List<Veiculo>> Get()
         {
-            return servico.ListagemVeiculos();
+            return await servico.ListagemVeiculos();
         }
 
-        // GET api/<VeiculoController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("{placa}")]
+        public async Task<Veiculo> Get(string placa)
         {
-            return "value";
+            return await this.servico.BuscarVeiculo(placa);
         }
 
-        // POST api/<VeiculoController>
         [HttpPost]
-        public ActionResult Post([FromBody] Veiculo veiculo)
+        public async Task<bool> Post(Veiculo veiculo)
         {
-            try
-            {
-                this.servico.CadastrarVeiculo(veiculo);
-
-                return Ok("Cadastrado com Sucesso!");
-            }
-            catch (Exception e)
-            {
-                return BadRequest($"Error: {e.Message}");
-            }
+            return await this.servico.CadastrarVeiculo(veiculo);
         }
 
-        // PUT api/<VeiculoController>/5
-        [HttpPut("{id}")]
-        public ActionResult Put([FromBody] Veiculo veiculo)
+        [HttpPut]
+        public async Task<bool> Put(Veiculo veiculo)
         {
-            try
-            {
-                this.servico.AtualizarVeiculo(veiculo);
-
-                return Ok("Atualizado com Sucesso!");
-            }
-            catch (Exception e)
-            {
-                return BadRequest($"Error: {e.Message}");
-            }
+            return await this.servico.AtualizarVeiculo(veiculo);
         }
 
-        // DELETE api/<VeiculoController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpDelete("{placa}")]
+        public async Task<bool> Delete(string placa)
         {
+            return await this.servico.ExcluirVeiculo(placa);
         }
     }
 }

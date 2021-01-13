@@ -12,6 +12,6 @@ namespace Projeto.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer("Password=sa1234567%;Persist Security Info=True;User ID=sa;Database=Estacionamento;Data Source=T24\\ESTACIONAMENTO");
-        }
+        }   
     }
 }

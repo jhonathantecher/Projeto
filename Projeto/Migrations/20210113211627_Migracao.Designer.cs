@@ -10,7 +10,7 @@ using Projeto.Data;
 namespace Projeto.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20210108203407_Migracao")]
+    [Migration("20210113211627_Migracao")]
     partial class Migracao
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,16 @@ namespace Projeto.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Cpf");
+                    b.Property<string>("Cpf")
+                        .HasMaxLength(11);
 
-                    b.Property<string>("Nome");
+                    b.Property<bool>("Excluido");
 
-                    b.Property<int>("TipoCliente");
+                    b.Property<string>("Nome")
+                        .HasMaxLength(50);
+
+                    b.Property<int>("TipoClienteEnum")
+                        .HasColumnName("TipoCliente");
 
                     b.HasKey("Id");
 
@@ -66,9 +71,13 @@ namespace Projeto.Migrations
 
                     b.Property<int>("ClienteId");
 
-                    b.Property<string>("Marca");
+                    b.Property<bool>("Excluido");
 
-                    b.Property<string>("Modelo");
+                    b.Property<string>("Marca")
+                        .HasMaxLength(20);
+
+                    b.Property<string>("Modelo")
+                        .HasMaxLength(20);
 
                     b.HasKey("Id");
 
@@ -80,14 +89,14 @@ namespace Projeto.Migrations
             modelBuilder.Entity("Projeto.Entity.Ticket", b =>
                 {
                     b.HasOne("Projeto.Entity.Veiculo", "Veiculo")
-                        .WithMany()
+                        .WithMany("Ticktes")
                         .HasForeignKey("VeiculoId");
                 });
 
             modelBuilder.Entity("Projeto.Entity.Veiculo", b =>
                 {
                     b.HasOne("Projeto.Entity.Cliente", "Cliente")
-                        .WithMany()
+                        .WithMany("Veiculos")
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

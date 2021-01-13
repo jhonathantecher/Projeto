@@ -4,80 +4,61 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace Projeto.Service
 {
     public class TicketService
     {
         Context context = new Context();
+        VeiculoService veiculoService = new VeiculoService();
 
-        //Realiza a Operação de Inclusão de um Ticket.
-        public void CadastrarTicket(Ticket ticket)
+        public async Task<bool> CadastrarTicket(string placa)
         {
-            //Verifica se o Veiculo existe.
-            var veiculo = BuscarVeiculo(ticket.VeiculoId);
+            var veiculo = await veiculoService.BuscarVeiculo(placa);
 
-            if (veiculo != null)
-            {
-                //Verifica se o Veiculo informado não esta no Patio.
-                //Dessa forma um Ticket não pode ser gerado duas vezes para o mesmo Veiculo.
-                if (!VerificarVeiculoEstacionado(ticket.VeiculoId))
-                {
-                    //Verifica se há Vagas disponiveis.
-                    if (ListagemEstacionamento().Count < 50)
-                    {
-                        //Se o veiculo existir e houverem Vagas Disponiveis, o Ticket é gerado.
-                        ticket = new Ticket(ticket.VeiculoId, veiculo, DateTime.Now);
-
-                        this.context.Tickets.Add(ticket);
-                        this.context.SaveChangesAsync();
-                    }
-                    else
-                    {
-                        throw new Exception("Patio Lotado!");
-                    }
-                }
-                else
-                {
-                    throw new Exception("O Veiculo já se encontra no Estacionamento!");
-                }
-            }
-            else
-            {
+            if (veiculo == null)
                 throw new Exception("Veiculo não Encontrado!");
-            }
+
+            if (await VerificarVeiculoEstacionado(placa))
+                throw new Exception("O Veiculo já se encontra no Estacionamento!");
+
+            if ((await ListagemEstacionamento()).Count >= 50)
+                throw new Exception("Patio Lotado!");
+
+            var ticket = new Ticket
+            {
+                VeiculoId = placa,
+                DataEntrada = DateTime.Now
+            };
+
+            this.context.Tickets.Add(ticket);
+            await this.context.SaveChangesAsync();
+
+            return true;
         }
 
-        //Realiza a Operação de encerramento de um Ticket.
-        public void FinalizarTicket(Ticket ticket)
+        public async Task<bool> FinalizarTicket(int ticketId)
         {
-            //Busca o Ticket para Verificar se ele existe.
-            var tic = BuscarTicket(ticket.Id);
+            var ticket = await BuscarTicket(ticketId);
 
-            if (ticket != null)
-            {
-                //Verifica se o Ticket esta ativo para poder ser finalizado.
-                if (ticket.DataSaida == null)
-                {
-                    ticket.DataSaida = DateTime.Now;
-                    ticket.Valor = (1.50 * (Math.Ceiling(DateTime.Now.Subtract(ticket.DataEntrada).TotalMinutes / 15)));
-
-                    this.context.Tickets.Update(ticket);
-                    this.context.SaveChangesAsync();
-                }
-                else
-                {
-                    throw new Exception("Ticket Inativo!");
-                }
-            }
-            else
-            {
+            if (ticket == null)
                 throw new Exception("Ticket não Encontrado!");
-            }
+
+            if (ticket.DataSaida != null)
+                throw new Exception("Ticket Inativo!");
+
+            ticket.DataSaida = DateTime.Now;
+            ticket.Valor = 1.50 * (Math.Ceiling(DateTime.Now.Subtract(ticket.DataEntrada).TotalMinutes / 15));
+
+            this.context.Tickets.Update(ticket);
+            await this.context.SaveChangesAsync();
+
+            return true;
         }
 
         //Calcula o valor total arrecadado nos Ticket's em determinado Período.
-        public double ValorPorPeriodo(string dataInicial, string dataFinal)
+        public async Task<double> ValorPorPeriodo(string dataInicial, string dataFinal)
         {
             if (!ValidacaoDateTime(dataInicial, dataFinal))
                 throw new Exception("Data Invalida!");
@@ -85,20 +66,22 @@ namespace Projeto.Service
             if (!ValidacaoDateTimeFinal(dataInicial, dataFinal))
                 throw new Exception("A Data Final deve ser maior que a Data Inicial!");
 
-            return this.context.Tickets.AsNoTracking().Where(ticket => ticket.DataSaida != null && 
-                                                ticket.DataEntrada >= DateTime.Parse(dataInicial) && 
-                                                ticket.DataSaida <= DateTime.Parse(dataFinal))
-                                                .Sum(ticket => ticket.Valor);
+            return await this.context.Tickets
+                .AsNoTracking()
+                .Where(ticket => ticket.DataSaida != null &&
+                    ticket.DataEntrada >= DateTime.Parse(dataInicial) &&
+                    ticket.DataSaida <= DateTime.Parse(dataFinal))
+                .SumAsync(ticket => ticket.Valor);
         }
 
-        public bool ValidacaoDateTime(string dataInicial, string dataFinal)
+        private bool ValidacaoDateTime(string dataInicial, string dataFinal)
         {
             if (DateTime.TryParse(dataInicial, out DateTime r) && DateTime.TryParse(dataFinal, out DateTime t))
                 return true;
             return false;
         }
 
-        public bool ValidacaoDateTimeFinal(string dataInicial, string dataFinal)
+        private bool ValidacaoDateTimeFinal(string dataInicial, string dataFinal)
         {
             if (DateTime.Parse(dataFinal) >= DateTime.Parse(dataInicial))
                 return true;
@@ -106,44 +89,57 @@ namespace Projeto.Service
                 return false;
         }
 
-        private Veiculo BuscarVeiculo(string placa)
+        public async Task<Ticket> BuscarTicket(int ticketId)
         {
-            return this.context.Veiculos.AsNoTracking().Where(veiculo => veiculo.Id == placa).FirstOrDefault();
+            return await this.context.Tickets
+                .AsNoTracking()
+                .Where(ticket => ticket.Id == ticketId)
+                .FirstOrDefaultAsync();
         }
 
-        private Ticket BuscarTicket(int ticketId)
+        private async Task<bool> VerificarVeiculoEstacionado(string placa)
         {
-            return this.context.Tickets.AsNoTracking().Where(ticket => ticket.Id == ticketId).FirstOrDefault();
-        }
-
-        //Verifica se um determinado Veiculo se encontra no estacionamento.
-        private bool VerificarVeiculoEstacionado(string placa)
-        {
-            var veiculo = this.context.Tickets.AsNoTracking().Where(ticket => ticket.DataSaida == null && ticket.VeiculoId == placa).FirstOrDefault();
+            var veiculo = await this.context.Tickets
+                .AsNoTracking()
+                .Where(ticket => ticket.DataSaida == null && ticket.VeiculoId == placa)
+                .FirstOrDefaultAsync();
 
             if (veiculo != null)
                 return true;
             return false;
         }
 
-        public List<Ticket> ListagemTickets()
+        public async Task<List<Ticket>> ListagemTickets()
         {
-            return this.context.Tickets.AsNoTracking().OrderBy(ticket => ticket.DataSaida).ToList();
+            return await this.context.Tickets
+                .AsNoTracking()
+                .OrderBy(ticket => ticket.DataSaida)
+                .ToListAsync();
 
         }
-        public List<Ticket> ListagemTicketsAtivos()
+        public async Task<List<Ticket>> ListagemTicketsAtivos()
         {
-            return this.context.Tickets.AsNoTracking().Where(ticket => ticket.DataSaida == null).ToList();
+            return await this.context.Tickets
+                .AsNoTracking()
+                .Where(ticket => ticket.DataSaida == null)
+                .ToListAsync();
         }
 
-        public List<Veiculo> ListagemEstacionamento()
+        public async Task<List<Veiculo>> ListagemEstacionamento()
         {
-            return this.context.Tickets.AsNoTracking().Where(ticket => ticket.DataSaida == null).Select(ticket => ticket.Veiculo).ToList();
+            return await this.context.Tickets
+                .AsNoTracking()
+                .Where(ticket => ticket.DataSaida == null)
+                .Select(ticket => ticket.Veiculo)
+                .ToListAsync();
         }
 
-        public List<Ticket> ListagemTicketsFinalizados()
+        public async Task<List<Ticket>> ListagemTicketsFinalizados()
         {
-            return this.context.Tickets.AsNoTracking().Where(ticket => ticket.DataSaida != null).ToList();
+            return await this.context.Tickets
+                .AsNoTracking()
+                .Where(ticket => ticket.DataSaida != null)
+                .ToListAsync();
         }
     }
 }

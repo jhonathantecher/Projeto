@@ -14,9 +14,10 @@ namespace Projeto.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Cpf = table.Column<string>(nullable: true),
-                    Nome = table.Column<string>(nullable: true),
-                    TipoCliente = table.Column<int>(nullable: false)
+                    Cpf = table.Column<string>(maxLength: 11, nullable: true),
+                    Nome = table.Column<string>(maxLength: 50, nullable: true),
+                    TipoCliente = table.Column<int>(nullable: false),
+                    Excluido = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -29,8 +30,9 @@ namespace Projeto.Migrations
                 {
                     Id = table.Column<string>(nullable: false),
                     ClienteId = table.Column<int>(nullable: false),
-                    Marca = table.Column<string>(nullable: true),
-                    Modelo = table.Column<string>(nullable: true)
+                    Marca = table.Column<string>(maxLength: 20, nullable: true),
+                    Modelo = table.Column<string>(maxLength: 20, nullable: true),
+                    Excluido = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {

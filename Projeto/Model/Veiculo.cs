@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Projeto.Entity
 {
@@ -9,18 +8,9 @@ namespace Projeto.Entity
         public string Id { get; set; }
         public Cliente Cliente { get; set; }
         public int ClienteId { get; set; }
+        public List<Ticket> Ticktes { get; set; }
         public string Marca { get; set; }
         public string Modelo { get; set; }
-
-        public Veiculo(){}
-
-        public Veiculo(string placa, Cliente cliente, int clienteId, string marca, string modelo)
-        {
-            Id = placa;
-            Cliente = cliente;
-            ClienteId = clienteId;
-            Marca = marca;
-            Modelo = modelo;
-        }      
+        public bool Excluido { get; set; }
     }
 }

@@ -5,6 +5,7 @@ using Projeto.Entity.Enum;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Projeto.Service
 {
@@ -12,76 +13,99 @@ namespace Projeto.Service
     {
         Context context = new Context();
 
-        public void CadastrarCliente(Cliente cliente)
+        public async Task<bool> CadastrarCliente(Cliente cliente)
         {
             if (!ValidacaoCPF(cliente.Cpf) && cliente.Cpf != null)
                 throw new Exception("CPF Invalido!");
 
-            //Busca para verificar se o Cliente já existe.
-            var clienteExiste = BuscarClienteCPF(cliente.Cpf);
+            var clienteExiste = await BuscarClienteCPF(cliente.Cpf);
 
-            if (clienteExiste == null)
-            {
-                var cli = new Cliente(cliente.Cpf, cliente.Nome, (cliente.Cpf == null ? TipoCliente.Passante : TipoCliente.Fixo));
-
-                this.context.Clientes.Add(cliente);
-                this.context.SaveChangesAsync();
-            }
-            else
-            {
+            if (clienteExiste != null)
                 throw new Exception("Cliente já existente!");
-            }
+
+            cliente = new Cliente
+            {
+                Cpf = cliente.Cpf,
+                Nome = cliente.Nome,
+                TipoClienteEnum = cliente.Cpf == null ? TipoClienteEnum.Padrao : TipoClienteEnum.Mensalista,
+                Excluido = false
+            };
+
+            this.context.Clientes.Add(cliente);
+            await this.context.SaveChangesAsync();
+
+            return true;
         }
 
-        public void AtuaizarCliente(Cliente cliente)
+        public async Task<bool> AtuaizarCliente(Cliente cliente)
         {
-            //Busca para verificar se o Cliente já existe.
-            var cli = BuscarClienteId(cliente.Id);
+            var cli = await BuscarClienteId(cliente.Id);
 
-            if (cli != null)
-            {
-                if (CompararCPF(cliente))
-                {
-                    this.context.Clientes.Update(cliente);
-                    this.context.SaveChangesAsync();
-                }
-                else
-                {
-                    throw new Exception("CPF ja Utilizado!");
-                }
-            }
-            else
-            {
+            if (cli == null)
                 throw new Exception("Cliente não existe!");
-            }
+
+            if (!await CompararCPF(cliente))
+                throw new Exception("CPF ja Utilizado!");
+
+            this.context.Clientes.Update(cliente);
+            await this.context.SaveChangesAsync();
+
+            return true;
         }
 
-        private Cliente BuscarClienteId(int id)
+        public async Task<bool> ExcluirCliente(int clienteId)
         {
-            return this.context.Clientes.AsNoTracking().Where(cliente => cliente.Id == id).FirstOrDefault();
+            var cliente = await BuscarClienteId(clienteId);
+
+            if (cliente == null)
+                throw new Exception("Cliente não existe!");
+
+            cliente.Excluido = true;
+
+            this.context.Clientes.Update(cliente);
+            await this.context.SaveChangesAsync();
+
+            return true;
         }
 
-        private Cliente BuscarClienteCPF(string cpf)
+        public async Task<Cliente> BuscarClienteId(int id)
         {
-            return this.context.Clientes.AsNoTracking().Where(cliente => cliente.Cpf == cpf).FirstOrDefault();
+            return await this.context.Clientes
+                .AsNoTracking()
+                .Where(cliente => cliente.Id == id)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Cliente> BuscarClienteCPF(string cpf)
+        {
+            return await this.context.Clientes
+                .AsNoTracking()
+                .Where(cliente => cliente.Cpf == cpf && cpf != null)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Cliente>> ListagemClientes()
+        {
+            return await this.context.Clientes
+                .Where(cliente => !cliente.Excluido)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         //Verifica se o CPF do cliente não é igual ao de outro Cliente.
-        private bool CompararCPF(Cliente cliente)
+        private async Task<bool> CompararCPF(Cliente cliente)
         {
-            var cli = this.context.Clientes.AsNoTracking().Where(cli => cli.Cpf == cliente.Cpf && cli.Id != cliente.Id).FirstOrDefault();
+            var cli = await this.context.Clientes
+                .AsNoTracking()
+                .Where(cli => cli.Cpf == cliente.Cpf && cli.Id != cliente.Id)
+                .FirstOrDefaultAsync();
 
             if (cli == null)
                 return true;
             return false;
         }
 
-        public List<Cliente> ListagemClientes()
-        {
-            return this.context.Clientes.AsNoTracking().ToList();
-        }
-
-        public bool ValidacaoCPF(string cpf)
+        private bool ValidacaoCPF(string cpf)
         {
             if (cpf != null)
             {
@@ -89,7 +113,6 @@ namespace Projeto.Service
                     return true;
                 return false;
             }
-
             return false;
         }
     }

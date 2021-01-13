@@ -5,57 +5,79 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Projeto.Service
 {
     public class VeiculoService
     {
         Context context = new Context();
+        ClienteService clienteService = new ClienteService();
 
-        public void CadastrarVeiculo(Veiculo veiculo)
+        public async Task<bool> CadastrarVeiculo(Veiculo veiculo)
         {
             if (!ValidacaoPlaca(veiculo.Id))
                 throw new Exception("Placa Invalida!");
 
             //Verifica se o Veiculo nao Existe.
-            var vei = BuscarVeiculo(veiculo.Id);
+            var vei = await BuscarVeiculo(veiculo.Id);
             if (vei != null)
-                throw new Exception("Veiculo ja Existe!");
+                throw new Exception("Veiculo ja existente!");
 
             //Verifica se o Dono do Veiculo Existe.
-            var cliente = BuscarCliente(veiculo.ClienteId);
+            var cliente = await this.clienteService.BuscarClienteId(veiculo.ClienteId);
             if (cliente == null)
                 throw new Exception("Cliente Inexistente!");
 
-            vei = new Veiculo(veiculo.Id, cliente, cliente.Id, veiculo.Marca, veiculo.Modelo);
             this.context.Add(veiculo);
-            this.context.SaveChangesAsync();
+            await this.context.SaveChangesAsync();
+
+            return true;
         }
 
-        public void AtualizarVeiculo(Veiculo veiculo)
+        public async Task<bool> AtualizarVeiculo(Veiculo veiculo)
         {
             //Verifica se o Veiculo Existe.
-            var vei = BuscarVeiculo(veiculo.Id);
+            var vei = await BuscarVeiculo(veiculo.Id);
 
             if (vei == null)
                 throw new Exception("Veiculo Inexistente!");
 
             this.context.Veiculos.Update(veiculo);
-            this.context.SaveChangesAsync();
+            await this.context.SaveChangesAsync();
+
+            return true;
         }
 
-        public Veiculo BuscarVeiculo(string veiculoId)
+        public async Task<bool> ExcluirVeiculo(string placa)
         {
-            return this.context.Veiculos.AsNoTracking().Where(veiculo => veiculo.Id == veiculoId).FirstOrDefault();
+            //Verifica se o Veiculo Existe.
+            var veiculo = await BuscarVeiculo(placa);
 
+            if (veiculo == null)
+                throw new Exception("Veiculo Inexistente!");
+
+            veiculo.Excluido = true;
+
+            this.context.Veiculos.Update(veiculo);
+            await this.context.SaveChangesAsync();
+
+            return true;
         }
-        private Cliente BuscarCliente(int clienteId)
+
+        public async Task<Veiculo> BuscarVeiculo(string veiculoId)
         {
-            return this.context.Clientes.AsNoTracking().Where(cliente => cliente.Id == clienteId).FirstOrDefault();
+            return await this.context.Veiculos
+                .AsNoTracking()
+                .Where(veiculo => veiculo.Id == veiculoId)
+                .FirstOrDefaultAsync();
         }
-        public List<Veiculo> ListagemVeiculos()
+
+        public async Task<List<Veiculo>> ListagemVeiculos()
         {
-            return this.context.Veiculos.AsNoTracking().ToList();
+            return await this.context.Veiculos
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public bool ValidacaoPlaca(string placa)
