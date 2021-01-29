@@ -1,0 +1,55 @@
+<mat-card class="card" fxLayout="column" fxFlex>
+  <div class="title" fxLayout="column">
+    <div fxLayout="row" fxFlex fxLayoutGap="50px">
+      <h2>Pátio</h2>
+      <div fxLayout="row" fxLayoutGap="50px" fxFlex fxLayoutAlign="end center">
+        <h3 class="info">Capacidade: {{capacidade}}</h3>
+        <h3 class="info" fxLayoutAlign="center">Ocupadas: {{ocupadas}}</h3>
+        <h3 class="info">Disponíveis: {{disponiveis}}</h3>
+      </div>
+    </div>
+    <div fxLayout="row" fxFlex>
+      <span class="secondary-text" fxLayoutAlign="center end">
+        <i class="material-icons">info</i>
+        Aqui você pode visualizar os Veículos presentes no Pátio.
+      </span>
+    </div>
+  </div>
+
+  <mat-card class="empty" fxLayoutAlign="center center" fxFlex *ngIf="ocupadas == 0">
+    <h2>Não há Veículos no Pátio.</h2>
+  </mat-card>
+
+  <mat-card fxLayout="column" *ngIf="ocupadas != 0">
+    <table mat-table [dataSource]="estacionamento" class="mat-elevation-z8 table">
+
+      <ng-container matColumnDef="placa">
+        <th mat-header-cell class="th" *matHeaderCellDef>Placa</th>
+        <td mat-cell *matCellDef="let item"> {{item.placa}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="marca">
+        <th mat-header-cell class="th" *matHeaderCellDef>Marca</th>
+        <td mat-cell *matCellDef="let item"> {{item.marca}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="modelo">
+        <th mat-header-cell class="th" *matHeaderCellDef>Modelo</th>
+        <td mat-cell *matCellDef="let item"> {{item.modelo}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="nome">
+        <th mat-header-cell class="th" *matHeaderCellDef>Nome</th>
+        <td mat-cell *matCellDef="let item"> {{item.nome}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="dataEntrada">
+        <th mat-header-cell class="th" *matHeaderCellDef>Entrada</th>
+        <td mat-cell *matCellDef="let item"> {{item.dataEntrada | date: 'dd/MM/yyyy HH:mm'}} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+      <tr mat-row *matRowDef="let row; columns: colunas;"></tr>
+    </table>
+  </mat-card>
+</mat-card>

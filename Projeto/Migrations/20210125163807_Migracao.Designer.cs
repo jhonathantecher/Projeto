@@ -10,7 +10,7 @@ using Projeto.Data;
 namespace Projeto.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20210113211627_Migracao")]
+    [Migration("20210125163807_Migracao")]
     partial class Migracao
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,29 +23,22 @@ namespace Projeto.Migrations
 
             modelBuilder.Entity("Projeto.Entity.Cliente", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("ClienteId")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Cpf")
-                        .HasMaxLength(11);
-
                     b.Property<bool>("Excluido");
 
-                    b.Property<string>("Nome")
-                        .HasMaxLength(50);
+                    b.Property<string>("Nome");
 
-                    b.Property<int>("TipoClienteEnum")
-                        .HasColumnName("TipoCliente");
-
-                    b.HasKey("Id");
+                    b.HasKey("ClienteId");
 
                     b.ToTable("Clientes");
                 });
 
             modelBuilder.Entity("Projeto.Entity.Ticket", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("TicketId")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -53,11 +46,13 @@ namespace Projeto.Migrations
 
                     b.Property<DateTime?>("DataSaida");
 
+                    b.Property<bool>("Excluido");
+
                     b.Property<double>("Valor");
 
                     b.Property<string>("VeiculoId");
 
-                    b.HasKey("Id");
+                    b.HasKey("TicketId");
 
                     b.HasIndex("VeiculoId");
 
@@ -66,20 +61,18 @@ namespace Projeto.Migrations
 
             modelBuilder.Entity("Projeto.Entity.Veiculo", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("VeiculoId")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("ClienteId");
 
                     b.Property<bool>("Excluido");
 
-                    b.Property<string>("Marca")
-                        .HasMaxLength(20);
+                    b.Property<string>("Marca");
 
-                    b.Property<string>("Modelo")
-                        .HasMaxLength(20);
+                    b.Property<string>("Modelo");
 
-                    b.HasKey("Id");
+                    b.HasKey("VeiculoId");
 
                     b.HasIndex("ClienteId");
 
@@ -89,14 +82,14 @@ namespace Projeto.Migrations
             modelBuilder.Entity("Projeto.Entity.Ticket", b =>
                 {
                     b.HasOne("Projeto.Entity.Veiculo", "Veiculo")
-                        .WithMany("Ticktes")
+                        .WithMany()
                         .HasForeignKey("VeiculoId");
                 });
 
             modelBuilder.Entity("Projeto.Entity.Veiculo", b =>
                 {
                     b.HasOne("Projeto.Entity.Cliente", "Cliente")
-                        .WithMany("Veiculos")
+                        .WithMany()
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

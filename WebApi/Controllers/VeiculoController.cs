@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Projeto.Entity;
+using Projeto.Model;
 using Projeto.Service;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,31 +13,25 @@ namespace WebApi.Controllers
         VeiculoService servico = new VeiculoService();
 
         [HttpGet]
-        public async Task<List<Veiculo>> Get()
+        public async Task<List<VeiculoModel>> ObterListagemVeiculos()
         {
             return await servico.ListagemVeiculos();
         }
 
-        [HttpGet("{placa}")]
-        public async Task<Veiculo> Get(string placa)
+        [HttpGet("{pesquisa}")]
+        public async Task<List<VeiculoModel>> PesquisarListagemVeiculos(string pesquisa)
         {
-            return await this.servico.BuscarVeiculo(placa);
-        }
-
-        [HttpPost]
-        public async Task<bool> Post(Veiculo veiculo)
-        {
-            return await this.servico.CadastrarVeiculo(veiculo);
+            return await this.servico.PesquisarVeiculos(pesquisa);
         }
 
         [HttpPut]
-        public async Task<bool> Put(Veiculo veiculo)
+        public async Task<bool> AtualizarVeiculo(VeiculoModel veiculo)
         {
             return await this.servico.AtualizarVeiculo(veiculo);
         }
 
         [HttpDelete("{placa}")]
-        public async Task<bool> Delete(string placa)
+        public async Task<bool> ExcluirVeiculo(string placa)
         {
             return await this.servico.ExcluirVeiculo(placa);
         }

@@ -12,36 +12,34 @@ namespace Projeto.Migrations
                 name: "Clientes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
+                    ClienteId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Cpf = table.Column<string>(maxLength: 11, nullable: true),
-                    Nome = table.Column<string>(maxLength: 50, nullable: true),
-                    TipoCliente = table.Column<int>(nullable: false),
+                    Nome = table.Column<string>(nullable: true),
                     Excluido = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Clientes", x => x.Id);
+                    table.PrimaryKey("PK_Clientes", x => x.ClienteId);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Veiculos",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
+                    VeiculoId = table.Column<string>(nullable: false),
                     ClienteId = table.Column<int>(nullable: false),
-                    Marca = table.Column<string>(maxLength: 20, nullable: true),
-                    Modelo = table.Column<string>(maxLength: 20, nullable: true),
+                    Marca = table.Column<string>(nullable: true),
+                    Modelo = table.Column<string>(nullable: true),
                     Excluido = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Veiculos", x => x.Id);
+                    table.PrimaryKey("PK_Veiculos", x => x.VeiculoId);
                     table.ForeignKey(
                         name: "FK_Veiculos_Clientes_ClienteId",
                         column: x => x.ClienteId,
                         principalTable: "Clientes",
-                        principalColumn: "Id",
+                        principalColumn: "ClienteId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -49,21 +47,22 @@ namespace Projeto.Migrations
                 name: "Tickets",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
+                    TicketId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     VeiculoId = table.Column<string>(nullable: true),
                     DataEntrada = table.Column<DateTime>(nullable: false),
                     DataSaida = table.Column<DateTime>(nullable: true),
-                    Valor = table.Column<double>(nullable: false)
+                    Valor = table.Column<double>(nullable: false),
+                    Excluido = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tickets", x => x.Id);
+                    table.PrimaryKey("PK_Tickets", x => x.TicketId);
                     table.ForeignKey(
                         name: "FK_Tickets_Veiculos_VeiculoId",
                         column: x => x.VeiculoId,
                         principalTable: "Veiculos",
-                        principalColumn: "Id",
+                        principalColumn: "VeiculoId",
                         onDelete: ReferentialAction.Restrict);
                 });
 

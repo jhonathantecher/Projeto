@@ -1,0 +1,38 @@
+<div fxLayout="column">
+  <h1 class="title-dialog" mat-dialog-title>Veículos</h1>
+
+  <mat-card class="card" fxLayout="column" fxFlex>
+    <h2 class="titleForm">Atualizar Veículo</h2>
+    <form class="form" [formGroup]="form.get('veiculo')" fxLayout="column">
+      <mat-form-field class="field">
+        <input matInput formControlName="placa" placeholder="Placa" type="text">
+      </mat-form-field>
+
+      <mat-form-field class="field">
+        <input matInput formControlName="marca" maxlength="30" placeholder="Marca" type="text">
+        <mat-error *ngIf="form.get('veiculo').get('marca').errors && form.get('veiculo').get('marca').touched">
+          {{getErrorMessage('marca')}}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="field">
+        <input matInput formControlName="modelo" maxlength="30" placeholder="Modelo" type="text">
+        <mat-error *ngIf="form.get('veiculo').get('modelo').errors && form.get('veiculo').get('modelo').touched">
+          {{getErrorMessage('modelo')}}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="field">
+        <input matInput formControlName="nome" maxlength="50" placeholder="Dono" type="text">
+        <mat-error *ngIf="form.get('veiculo').get('nome').errors && form.get('veiculo').get('nome').touched">
+          {{getErrorMessage('nome')}}
+        </mat-error>
+      </mat-form-field>
+    </form>
+  </mat-card>
+
+  <div fxLayout="row" class="btt-dialog-att" mat-dialog-actions>
+    <button class="bttn-dialog-salvar" (click)="salvarVeiculo()" mat-button [disabled]="form.get('veiculo').invalid">Salvar</button>
+    <button class="bttn-dialog-fechar" mat-button mat-dialog-close>Fechar</button>
+  </div>
+</div>

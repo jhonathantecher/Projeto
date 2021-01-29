@@ -1,0 +1,60 @@
+.mat-dialog-container{
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0;
+  width: 450px;
+}
+
+.title-dialog{
+  background-color: rgba(0, 0, 0, 0.890);
+  padding: 10px;
+  padding-left:20px;
+  color: #fff;
+}
+
+.card{
+  margin: 20px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.form{
+  padding-left: 10px;
+}
+
+.titleForm{
+  margin-top: 0;
+  padding-left: 10px;
+  font-weight: 500;
+}
+
+.field{
+  width: 90%;
+}
+
+.btt-dialog-att{
+  padding-left: 20px;
+  padding-top: 25px;
+  padding-bottom: 15px;
+}
+.bttn-dialog-salvar{
+  width: 80px;
+  background-color:rgba(0, 0, 0, 0.890);
+  color: #fff;
+}
+.bttn-dialog-salvar:enabled:hover{
+  -ms-transform: scale(1.05);
+  -webkit-transform: scale(1.05);
+  transform: scale(1.05);
+}
+.bttn-dialog-salvar:disabled{
+  background-color: rgba(0, 0, 0, 0.500);
+  color: #ccc;
+}
+
+.bttn-dialog-fechar{
+  width: 80px;
+  background-color:rgb(170, 7, 7);
+  padding-left: 13px;
+  color: #fff;
+}

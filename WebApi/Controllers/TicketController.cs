@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Projeto.Entity;
+using Projeto.Model;
 using Projeto.Service;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,40 +13,58 @@ namespace WebApi.Controllers
     {
         TicketService servico = new TicketService();
 
-        [HttpGet("Tickets")]
-        public async Task<List<Ticket>> Get()
+        [HttpGet("estacionamento")]
+        public async Task<List<EstacionamentoBuscaModel>> ObterListagemEstacionamento()
+        {
+            return await servico.ListagemEstacionamento();
+        }
+
+        [HttpGet("tickets")]
+        public async Task<List<TicketBuscaModel>> ObterListagemTickets()
         {
             return await servico.ListagemTickets();
         }
 
-        [HttpGet("Ativos")]
-        public async Task<List<Ticket>> GetAtivos()
+        [HttpGet("tickets/{pesquisa}")]
+        public async Task<List<TicketBuscaModel>> PesquisarListagemTickets(string pesquisa)
         {
-            return await servico.ListagemTicketsAtivos();
+            return await servico.PesquisarTickets(pesquisa);
         }
 
-        [HttpGet("Finalizados")]
-        public async Task<List<Ticket>> GetFinalizados()
+        [HttpGet("tickets/finalizados")]
+        public async Task<List<TicketBuscaModel>> ObterListagemTicketsFinalizados()
         {
             return await servico.ListagemTicketsFinalizados();
         }
 
-        [HttpGet("{id}")]
-        public async Task<Ticket> Get(int id)
+        [HttpGet("tickets/finalizados/{pesquisa}")]
+        public async Task<List<TicketBuscaModel>> PesquisarListagemTicketsFinalizados(string pesquisa)
         {
-            return await servico.BuscarTicket(id);
+            return await servico.PesquisarTicketsFinalizados(pesquisa);
+        } 
+
+        [HttpGet("{placa}")]
+        public async Task<VeiculoModel> BuscarVeiculo(string placa)
+        {
+            return await servico.BuscarVeiculo(placa);
         }
 
-        [HttpPost("{placa}")]
-        public async Task<bool> Post(string placa)
+        [HttpPost]
+        public async Task<bool> CadastrarTicket(TicketCadastroModel model)
         {         
-            return await this.servico.CadastrarTicket(placa);
+            return await this.servico.CadastrarTicket(model);
         }
 
-        [HttpPut("{id}")]
-        public async Task<bool> Put(int id)
+        [HttpPut("{numero}")]
+        public async Task<bool> FinalizarTicket(int numero)
         {
-            return await this.servico.FinalizarTicket(id);
+            return await this.servico.FinalizarTicket(numero);
+        }
+
+        [HttpDelete("{numero}")]
+        public async Task<bool> ExcluirTicket(int numero)
+        {
+            return await this.servico.ExcluirTicket(numero);
         }
     }
 }

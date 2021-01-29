@@ -1,0 +1,45 @@
+.card{
+  min-height: 100vh;
+  border-radius: 0;
+}
+
+.title{
+  padding: 20px;
+  padding-top: 0;
+}
+
+.form{
+  padding-left: 30px;
+}
+
+.titleForm{
+  padding: 20px;
+  padding-left: 30px;
+  font-weight: 500;
+}
+
+.field{
+  min-width: 300px;
+  width: 35%;
+}
+
+.btt{
+  padding-top: 30px;
+  min-width: 300px;
+  width: 35%;
+}
+.bttn{
+  width: 80px;
+  background-color:rgba(0, 0, 0, 0.880);
+  color: #fff;
+}
+.bttn:hover:enabled{
+  background-color:#3f51b5;
+  -ms-transform: scale(1.05);
+  -webkit-transform: scale(1.05);
+  transform: scale(1.05);
+}
+.bttn:disabled{
+  background-color: rgba(0, 0, 0, 0.500);
+  color: #ccc;
+}

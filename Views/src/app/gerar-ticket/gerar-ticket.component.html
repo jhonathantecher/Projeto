@@ -1,0 +1,58 @@
+<mat-card class="card" fxLayout="column" fxFlex>
+  <div class="title" fxLayout="column">
+    <h2>Gerar Ticket</h2>
+    <div fxLayout="row" fxFlex>
+      <span class="secondary-text" fxLayoutAlign="center end">
+        <i class="material-icons">info</i>
+        Aqui você pode gerar Ticket's para os Veículos que entrarem no Estacionamento.
+      </span>
+    </div>
+  </div>
+
+  <div fxLayout="row" fxFlex>
+    <mat-card fxLayout="column" fxFlex>
+      <h2 class="titleForm">Novo Ticket</h2>
+      <form class="form" [formGroup]="gerarTicketFormService.form.get('veiculo')" fxLayout="column">
+
+        <div fxLayout="row">
+          <mat-form-field class="field">
+            <input matInput formControlName="placa" (keyup)='bloquearBusca()' maxlength="7" placeholder="Placa">
+            <mat-error *ngIf="gerarTicketFormService.form.get('veiculo').get('placa').errors && gerarTicketFormService.form.get('veiculo').get('placa').touched">
+              {{gerarTicketFormService.getErrorMessage('placa')}}
+            </mat-error>
+          </mat-form-field>
+          <div fxFlexAlign="center">
+            <button mat-icon-button type="button" [disabled]="!gerarTicketFormService.form.get('veiculo').get('placa').valid" (click)="buscarVeiculo()">
+              <i matTooltip="Buscar" class="material-icons">search</i>
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="!gerarTicketFormService.disableForm" fxLayout="column">
+          <mat-form-field class="field" >
+            <input matInput formControlName="marca" maxlength="30" placeholder="Marca">
+            <mat-error *ngIf="gerarTicketFormService.form.get('veiculo').get('marca').errors && gerarTicketFormService.form.get('veiculo').get('marca').touched">
+              {{gerarTicketFormService.getErrorMessage('marca')}}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="field">
+            <input matInput formControlName="modelo" maxlength="30" placeholder="Modelo">
+            <mat-error *ngIf="gerarTicketFormService.form.get('veiculo').get('modelo').errors && gerarTicketFormService.form.get('veiculo').get('modelo').touched">
+              {{gerarTicketFormService.getErrorMessage('modelo')}}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field class="field">
+            <input matInput formControlName="nome" maxlength="50" placeholder="Dono">
+            <mat-error *ngIf="gerarTicketFormService.form.get('veiculo').get('nome').errors && gerarTicketFormService.form.get('veiculo').get('nome').touched">
+              {{gerarTicketFormService.getErrorMessage('nome')}}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="btt">
+          <button mat-flat-button class="bttn" type="button" (click)="salvarTicket()" [disabled]="gerarTicketFormService.form.get('veiculo').invalid">Salvar</button>
+        </div>
+      </form>
+    </mat-card>
+  </div>
+</mat-card>
