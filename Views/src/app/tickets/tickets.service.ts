@@ -35,9 +35,8 @@ export class TicketService {
   finalizarTicket(numero: number) {
     return this.http.put<TicketBuscaModel>(`${this.baseURL}/${numero}`, null)
       .pipe(
-        take(1)
-      )
-      .subscribe(v => {
+        take(1))
+      .subscribe(() => {
         this.obterTickets();
         this.snackBar.open('Finalizado com Sucesso!', '', {
           duration: 3000,
@@ -49,10 +48,12 @@ export class TicketService {
   deletarTicket(numero: number) {
     return this.http.delete<TicketBuscaModel>(`${this.baseURL}/${numero}`)
       .pipe(
-        take(1)
-      )
+        take(1))
       .subscribe(() => {
-        this.obterTickets();
+        var tickets = this._tickets.getValue();
+        tickets = tickets.filter(v => v.numero !== numero);
+        this._tickets.next(tickets);
+
         this.snackBar.open('Excluído com Sucesso!', '', {
           duration: 3000,
           panelClass: ['green-snackbar', 'veiculo-snackbar'],

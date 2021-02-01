@@ -22,7 +22,7 @@ export class GerarTicketService {
       .pipe(
         take(1),
         catchError((error: HttpErrorResponse) => {
-          this.abrirSnackBarError(error.error.split(':', 2)[1].split('at', 1));
+          this.abrirSnackBarError(error.error.split(':', 2)[1].split(' at', 1));
           throw error;
         }))
       .subscribe(() => {

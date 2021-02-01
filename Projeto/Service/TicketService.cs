@@ -17,26 +17,21 @@ namespace Projeto.Service
         #region "Operações"
         public async Task<bool> CadastrarTicket(TicketCadastroModel model)
         {
-            if (!ValidacaoPlaca(model.Placa))
-                throw new Exception("Placa Inválida.");
-
             var patio = await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => t.DataSaida == null && !t.Excluido)
+                .Select(t => t.VeiculoId)
                 .ToListAsync();
 
             if (patio.Count >= 50)
                 throw new Exception("Pátio Lotado.");
 
-            var estacionado = patio
-                .Where(t => t.VeiculoId == model.Placa)
-                .FirstOrDefault();
-
-            if (estacionado != null)
+            if (patio.Any(v => v == model.Placa))
                 throw new Exception("O Veículo já está no Estacionamento.");
 
+            if (!ValidacaoPlaca(model.Placa))
+                throw new Exception("Placa Inválida.");
+
             var veiculo = await this.context.Veiculos
-                .AsNoTracking()
                 .Where(v => v.VeiculoId == model.Placa)
                 .FirstOrDefaultAsync();
 
@@ -55,32 +50,28 @@ namespace Projeto.Service
                         Nome = model.Nome
                     }
                 };
-                this.context.Tickets.Add(ticket);
             }
             else
             {
                 //Caso o Veículo exista mas esteja exluído, sobreescreve as informações e reativa.
                 if (veiculo.Excluido)
                 {
-                    veiculo = new Veiculo
-                    {
-                        VeiculoId = model.Placa,
-                        Marca = model.Marca,
-                        Modelo = model.Modelo,
-                        Cliente = new Cliente
-                        {
-                            ClienteId = veiculo.ClienteId,
-                            Nome = model.Nome,
-                            Excluido = false
-                        },
-                        Excluido = false
-                    };
-                }
+                    veiculo.Marca = model.Marca;
+                    veiculo.Modelo = model.Modelo;
+                    veiculo.Excluido = false;
 
+                    var cliente = await this.context.Clientes
+                        .Where(c => c.ClienteId == veiculo.ClienteId)
+                        .FirstOrDefaultAsync();
+
+                    cliente.Nome = model.Nome;
+
+                    this.context.Clientes.Update(cliente);
+                    this.context.Veiculos.Update(veiculo);
+                }      
                 ticket.Veiculo = veiculo;
-                this.context.Tickets.Update(ticket);
             }
-
+            this.context.Tickets.Add(ticket);
             await this.context.SaveChangesAsync();
 
             return true;
@@ -89,7 +80,6 @@ namespace Projeto.Service
         public async Task<bool> FinalizarTicket(int numero)
         {
             var ticket = await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => t.TicketId == numero)
                 .FirstOrDefaultAsync();
 
@@ -111,7 +101,6 @@ namespace Projeto.Service
         public async Task<bool> ExcluirTicket(int numero)
         {
             var ticket = await this.context.Tickets
-               .AsNoTracking()
                .Where(t => t.TicketId == numero)
                .FirstOrDefaultAsync();
 
@@ -131,7 +120,6 @@ namespace Projeto.Service
         public async Task<List<EstacionamentoBuscaModel>> ListagemEstacionamento()
         {
             return await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => t.DataSaida == null && !t.Excluido)
                 .Select(t => new EstacionamentoBuscaModel
                 {
@@ -148,7 +136,6 @@ namespace Projeto.Service
         public async Task<VeiculoModel> BuscarVeiculo(string placa)
         {
             return await this.context.Veiculos
-                .AsNoTracking()
                 .Where(v => v.VeiculoId == placa && !v.Excluido)
                 .Select(v => new VeiculoModel
                 {
@@ -164,7 +151,6 @@ namespace Projeto.Service
         public async Task<List<TicketBuscaModel>> ListagemTickets()
         {
             return await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => !t.Excluido)
                 .Select(t => new TicketBuscaModel
                 {
@@ -176,14 +162,14 @@ namespace Projeto.Service
                     DataSaida = t.DataSaida,
                     Valor = t.Valor
                 })
-                .OrderBy(ticket => ticket.DataSaida)
+                .OrderBy(t => t.Numero)
+                .OrderBy(t => t.DataSaida)         
                 .ToListAsync();
         }
 
         public async Task<List<TicketBuscaModel>> ListagemTicketsFinalizados()
         {
             return await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => t.DataSaida != null && !t.Excluido)
                 .Select(t => new TicketBuscaModel
                 {
@@ -203,7 +189,6 @@ namespace Projeto.Service
         public async Task<List<TicketBuscaModel>> PesquisarTickets(string pesquisa)
         {
             return await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => !t.Excluido)
                 .Where(t => t.TicketId.ToString().Contains(pesquisa) ||
                             t.Veiculo.VeiculoId.Contains(pesquisa) ||
@@ -226,7 +211,6 @@ namespace Projeto.Service
         public async Task<List<TicketBuscaModel>> PesquisarTicketsFinalizados(string pesquisa)
         {
             return await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => t.DataSaida != null && !t.Excluido)
                 .Where(t => t.TicketId.ToString().Contains(pesquisa) ||
                             t.Veiculo.VeiculoId.Contains(pesquisa) ||
@@ -255,7 +239,6 @@ namespace Projeto.Service
                 throw new Exception("A Data Final deve ser maior que a Data Inicial.");
 
             return await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => t.DataSaida != null && !t.Excluido &&
                             t.DataSaida >= DateTime.Parse(inicio) && t.DataSaida <= DateTime.Parse(fim))
                 .Select(t => new TicketBuscaModel
@@ -280,7 +263,6 @@ namespace Projeto.Service
                 throw new Exception("A Data Final deve ser maior que a Data Inicial.");
 
             return await this.context.Tickets
-                .AsNoTracking()
                 .Where(t => t.DataSaida != null && !t.Excluido &&
                             t.DataSaida >= DateTime.Parse(inicio) && t.DataSaida <= DateTime.Parse(fim))
                 .Where(t => t.TicketId.ToString().Contains(pesquisa) ||

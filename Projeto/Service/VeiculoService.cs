@@ -21,26 +21,24 @@ namespace Projeto.Service
                 throw new Exception("Placa Inválida!");
 
             var veiculo = await this.context.Veiculos
-               .AsNoTracking()
                .Where(v => v.VeiculoId == model.Placa)
                .FirstOrDefaultAsync();
 
             if (veiculo == null)
                 throw new Exception("O Veículo não Existe!");
 
-            veiculo = new Veiculo
-            {
-                VeiculoId = model.Placa,
-                Marca = model.Marca,
-                Modelo = model.Modelo,
-                Cliente = new Cliente
-                {
-                    ClienteId = model.ClienteId,
-                    Nome = model.Nome
-                }
-            };
+            veiculo.Marca = model.Marca;
+            veiculo.Modelo = model.Modelo;
 
+            var cliente = await this.context.Clientes
+               .Where(c => c.ClienteId == veiculo.ClienteId)
+               .FirstOrDefaultAsync();
+
+            cliente.Nome = model.Nome;
+
+            this.context.Clientes.Update(cliente);
             this.context.Veiculos.Update(veiculo);
+
             await this.context.SaveChangesAsync();
 
             return true;
@@ -49,19 +47,13 @@ namespace Projeto.Service
         public async Task<bool> ExcluirVeiculo(string placa)
         {
             var veiculo = await this.context.Veiculos
-                .AsNoTracking()
-                .Where(veiculo => veiculo.VeiculoId == placa)
+                .Where(v => v.VeiculoId == placa)
                 .FirstOrDefaultAsync();
 
             if (veiculo == null)
                 throw new Exception("O Veículo não Existe.");
 
-            var ticket = await this.context.Tickets
-                .AsNoTracking()
-                .Where(ticket => ticket.VeiculoId == placa && ticket.DataSaida == null && !ticket.Excluido)
-                .FirstOrDefaultAsync();
-
-            if (ticket != null)
+            if (this.context.Tickets.Any(t => t.VeiculoId == placa && t.DataSaida == null && !t.Excluido))
                 throw new Exception("O Veículo possui Ticket's em aberto.");
 
             veiculo.Excluido = true;
@@ -77,14 +69,12 @@ namespace Projeto.Service
         public async Task<List<VeiculoModel>> ListagemVeiculos()
         {
             return await this.context.Veiculos
-                            .AsNoTracking()
                             .Where(v => !v.Excluido)
                             .Select(v => new VeiculoModel
                             {
                                 Placa = v.VeiculoId,
                                 Marca = v.Marca,
                                 Modelo = v.Modelo,
-                                ClienteId = v.ClienteId,
                                 Nome = v.Cliente.Nome
                             })
                             .ToListAsync();
@@ -93,20 +83,19 @@ namespace Projeto.Service
         public async Task<List<VeiculoModel>> PesquisarVeiculos(string pesquisa)
         {
             return await this.context.Veiculos
-                .AsNoTracking()
-                .Where(v => !v.Excluido)
-                .Where(v => v.VeiculoId.Contains(pesquisa) ||
-                            v.Marca.Contains(pesquisa) ||
-                            v.Modelo.Contains(pesquisa) ||
-                            v.Cliente.Nome.Contains(pesquisa))
-                .Select(v => new VeiculoModel
-                {
-                    Placa = v.VeiculoId,
-                    Marca = v.Marca,
-                    Modelo = v.Modelo,
-                    Nome = v.Cliente.Nome
-                })
-                .ToListAsync();
+                        .Where(v => !v.Excluido)
+                        .Where(v => v.VeiculoId.Contains(pesquisa) ||
+                                    v.Marca.Contains(pesquisa) ||
+                                    v.Modelo.Contains(pesquisa) ||
+                                    v.Cliente.Nome.Contains(pesquisa))
+                        .Select(v => new VeiculoModel
+                        {
+                            Placa = v.VeiculoId,
+                            Marca = v.Marca,
+                            Modelo = v.Modelo,
+                            Nome = v.Cliente.Nome
+                        })
+                        .ToListAsync();
         }
         #endregion
 

@@ -62,7 +62,6 @@ export class DialogAtualizarVeiculoComponent implements OnInit {
   salvarVeiculo() {
     var veiculo: VeiculoModel = this.form.get('veiculo').value;
     veiculo.placa = this.veiculo.placa;
-    veiculo.clienteId = this.veiculo.clienteId;
 
     this.veiculoService.atualizarVeiculo(veiculo);
   }

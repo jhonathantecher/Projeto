@@ -21,32 +21,30 @@ export class VeiculoService {
     private snackBar: MatSnackBar) { }
 
   obterVeiculos() {
-    return this.http.get<VeiculoModel[]>(this.baseURL)
+    this.http.get<VeiculoModel[]>(this.baseURL)
       .pipe(
         take(1))
       .subscribe(v => this._veiculos.next(v));
   }
 
   buscarVeiculos(pesquisa: string) {
-    return this.http.get<VeiculoModel[]>(`${this.baseURL}/${pesquisa}`)
+    this.http.get<VeiculoModel[]>(`${this.baseURL}/${pesquisa}`)
       .pipe(
         take(1))
       .subscribe(v => this._veiculos.next(v));
   }
 
   atualizarVeiculo(veiculo: VeiculoModel) {
-    return this.http.put<VeiculoModel>(this.baseURL, veiculo)
+    this.http.put<VeiculoModel>(this.baseURL, veiculo)
       .pipe(
         take(1),
         catchError((error: HttpErrorResponse) => {
-          this.abrirSnackBarError(error.error.split(':', 2)[1].split('at', 1));
+          this.abrirSnackBarError(error.error.split(':', 2)[1].split(' at', 1));
           throw error;
         }))
       .subscribe(() => {
         let veiculos = this._veiculos.getValue()
-          .map(function (v) {
-            return v.placa == veiculo.placa ? veiculo : v;
-          });
+          .map(v => v.placa == veiculo.placa ? veiculo : v);
 
         this._veiculos.next(veiculos);
         this.abrirSnackBarSucesso();
@@ -54,11 +52,11 @@ export class VeiculoService {
   }
 
   deletarVeiculo(placa: string) {
-    return this.http.delete<VeiculoModel>(`${this.baseURL}/${placa}`)
+    this.http.delete<VeiculoModel>(`${this.baseURL}/${placa}`)
       .pipe(
         take(1),
         catchError((error: HttpErrorResponse) => {
-          this.abrirSnackBarError(error.error.split(':', 2)[1].split('at', 1));
+          this.abrirSnackBarError(error.error.split(':', 2)[1].split(' at', 1));
           throw error;
         }))
       .subscribe(() => {

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Projeto.Model;
 using Projeto.Service;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
